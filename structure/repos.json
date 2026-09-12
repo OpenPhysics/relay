@@ -49,6 +49,15 @@
       "description": "TypeScript library for controlling the CD48 Coincidence Counter via the Web Serial API. Published to npm.",
       "githubTopics": ["physics", "hardware", "web-serial", "coincidence-counter"],
       "status": "active"
+    },
+    {
+      "name": "vscene2d",
+      "displayName": "vscene2d",
+      "type": "library",
+      "language": ["Python"],
+      "description": "VPython-style 2D physics scenes that run natively in Jupyter.",
+      "githubTopics": ["physics", "jupyter", "physics-simulation", "vpython"],
+      "status": "active"
     }
   ]
 }
