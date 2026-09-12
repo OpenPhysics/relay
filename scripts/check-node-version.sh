@@ -101,7 +101,7 @@ print(engines + '\t' + types)
         fi
       fi
     done
-  done < <(jq -r '.repos[] | select(.name != "Relay") | .name' "$CATALOG")
+  done < <(jq -r '.repos[] | select(.name != "relay") | .name' "$CATALOG")
 fi
 
 if [[ $checked -gt 0 ]]; then

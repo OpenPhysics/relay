@@ -6,7 +6,7 @@
   "pagesBase": null,
   "repos": [
     {
-      "name": "Relay",
+      "name": "relay",
       "displayName": "Relay",
       "type": "tool",
       "language": ["Shell", "JavaScript"],

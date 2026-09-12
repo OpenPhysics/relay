@@ -84,7 +84,7 @@ daily at 04:00 UTC and on manual dispatch. For the workflow, add the token as a 
 secret:
 
 ```bash
-gh secret set GITLAB_TOKEN --repo OpenPhysics/Relay
+gh secret set GITLAB_TOKEN --repo OpenPhysics/relay
 # paste the token when prompted
 ```
 
@@ -92,15 +92,15 @@ Without that secret the workflow logs a notice and exits cleanly, so it is harml
 it up. Run it by hand with:
 
 ```bash
-gh workflow run gitlab-mirror.yml --repo OpenPhysics/Relay
-gh workflow run gitlab-mirror.yml --repo OpenPhysics/Relay -f mode=check
-gh workflow run gitlab-mirror.yml --repo OpenPhysics/Relay -f only=pycd48
+gh workflow run gitlab-mirror.yml --repo OpenPhysics/relay
+gh workflow run gitlab-mirror.yml --repo OpenPhysics/relay -f mode=check
+gh workflow run gitlab-mirror.yml --repo OpenPhysics/relay -f only=pycd48
 ```
 
 Or from a local cron / launchd job:
 
 ```cron
-17 4 * * *  GITLAB_TOKEN=glpat-… /home/you/OpenPhysics/Relay/scripts/sync-gitlab-mirror.sh >> /tmp/gitlab-mirror.log 2>&1
+17 4 * * *  GITLAB_TOKEN=glpat-… /home/you/OpenPhysics/relay/scripts/sync-gitlab-mirror.sh >> /tmp/gitlab-mirror.log 2>&1
 ```
 
 ## Verifying the backup

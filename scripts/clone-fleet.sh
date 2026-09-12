@@ -53,7 +53,7 @@ Options:
   -h, --help          Show this help
 
 Environment:
-  FLEET_WORKSPACE         Workspace root to clone into (default: Relay/..)
+  FLEET_WORKSPACE         Workspace root to clone into (default: relay/..)
 EOF
 }
 

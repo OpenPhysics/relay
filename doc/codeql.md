@@ -5,7 +5,7 @@ Every JavaScript/TypeScript repo calls the reusable workflow
 
 ```yaml
 codeql:
-  uses: OpenPhysics/Relay/.github/workflows/shared-codeql.yml@main
+  uses: OpenPhysics/relay/.github/workflows/shared-codeql.yml@main
 ```
 
 The shared job analyzes JavaScript/TypeScript with the

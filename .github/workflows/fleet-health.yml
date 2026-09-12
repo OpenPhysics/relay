@@ -54,7 +54,7 @@ jobs:
               .repos[]
               | select(
                   .status == "active"
-                  and .name != "Relay"
+                  and .name != "relay"
                   and ((.language // []) | any(. == "JavaScript" or . == "TypeScript"))
                 )
               | .name

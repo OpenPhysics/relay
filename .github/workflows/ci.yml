@@ -46,7 +46,7 @@ jobs:
         # Must stay fully qualified: `uses:` accepts no expressions, and inside a
         # reusable workflow a local `./` path resolves against the CALLER's
         # checkout, not this repo. Renaming the org means editing this line.
-        uses: OpenPhysics/Relay/.github/actions/security-audit@main
+        uses: OpenPhysics/relay/.github/actions/security-audit@main
 
       - name: Lint
         run: npm run lint

@@ -42,19 +42,19 @@ A member repo's `.github/workflows/ci.yml` calls the reusable workflows from thi
 ```yaml
 jobs:
   ci:
-    uses: OpenPhysics/Relay/.github/workflows/ci.yml@main
+    uses: OpenPhysics/relay/.github/workflows/ci.yml@main
   dependency-review:
     if: github.event_name == 'pull_request'
-    uses: OpenPhysics/Relay/.github/workflows/shared-dependency-review.yml@main
+    uses: OpenPhysics/relay/.github/workflows/shared-dependency-review.yml@main
   codeql:
-    uses: OpenPhysics/Relay/.github/workflows/shared-codeql.yml@main
+    uses: OpenPhysics/relay/.github/workflows/shared-codeql.yml@main
 ```
 
 Optional compliance checking:
 
 ```yaml
   compliance:
-    uses: OpenPhysics/Relay/.github/workflows/shared-compliance-check.yml@main
+    uses: OpenPhysics/relay/.github/workflows/shared-compliance-check.yml@main
     with:
       repo-name: ${{ github.event.repository.name }}
 ```
@@ -77,7 +77,7 @@ on:
 
 jobs:
   deploy:
-    uses: OpenPhysics/Relay/.github/workflows/deploy.yml@main
+    uses: OpenPhysics/relay/.github/workflows/deploy.yml@main
     permissions:
       contents: read
       pages: write

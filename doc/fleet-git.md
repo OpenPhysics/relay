@@ -17,7 +17,7 @@ fleet --type library log -1 --oneline
 Put it on your `PATH` once (symlink is enough if `~/.local/bin` is already there):
 
 ```bash
-ln -sfn ~/OpenPhysics/Relay/scripts/fleet ~/.local/bin/fleet
+ln -sfn ~/OpenPhysics/relay/scripts/fleet ~/.local/bin/fleet
 ```
 
 Or call it as `Relay/scripts/fleet …` / `scripts/fleet …` from the Relay directory.

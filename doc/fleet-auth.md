@@ -36,7 +36,7 @@ choice for ongoing org-wide automation (short-lived tokens, not tied to a person
 3. Add it as a Relay repository secret named **`FLEET_PAT`**:
 
    ```bash
-   gh secret set FLEET_PAT --repo OpenPhysics/Relay
+   gh secret set FLEET_PAT --repo OpenPhysics/relay
    # paste the token when prompted
    ```
 
@@ -62,8 +62,8 @@ scopes cleanly to the installed repos.
 3. Generate a **private key** and store two secrets on Relay:
 
    ```bash
-   gh secret set FLEET_APP_ID      --repo OpenPhysics/Relay   # the app's numeric ID
-   gh secret set FLEET_APP_PRIVATE_KEY --repo OpenPhysics/Relay < path/to/app-private-key.pem
+   gh secret set FLEET_APP_ID      --repo OpenPhysics/relay   # the app's numeric ID
+   gh secret set FLEET_APP_PRIVATE_KEY --repo OpenPhysics/relay < path/to/app-private-key.pem
    ```
 4. Mint a token in the workflow and hand it to `fleet-exec` as `GH_TOKEN`. Add this step before
    "Run fleet-exec" in [`fleet-exec.yml`](../.github/workflows/fleet-exec.yml):
@@ -93,7 +93,7 @@ scopes cleanly to the installed repos.
    repo's push permission via the API and opens nothing:
 
    ```bash
-   gh workflow run fleet-exec.yml --repo OpenPhysics/Relay -f target=library -f check_auth=true
+   gh workflow run fleet-exec.yml --repo OpenPhysics/relay -f target=library -f check_auth=true
    # or a single repo: -f only=pycd48 -f check_auth=true
    # locally: scripts/fleet-exec.sh --type library --check-auth
    ```

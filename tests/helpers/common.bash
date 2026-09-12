@@ -64,11 +64,11 @@ name: CI
 on: [push, pull_request]
 jobs:
   ci:
-    uses: ${org}/Relay/.github/workflows/ci.yml@main
+    uses: ${org}/relay/.github/workflows/ci.yml@main
   dependency-review:
-    uses: ${org}/Relay/.github/workflows/shared-dependency-review.yml@main
+    uses: ${org}/relay/.github/workflows/shared-dependency-review.yml@main
   codeql:
-    uses: ${org}/Relay/.github/workflows/shared-codeql.yml@main
+    uses: ${org}/relay/.github/workflows/shared-codeql.yml@main
 EOF
 
   cat >"$dir/.github/dependabot.yml" <<'EOF'

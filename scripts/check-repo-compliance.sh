@@ -53,12 +53,12 @@ fi
 
 if [ ! -f .github/workflows/ci.yml ]; then
   warn ".github/workflows/ci.yml is missing (not yet wired to Relay's reusable CI)"
-elif grep -q "$ORG/Relay/.github/workflows/ci.yml@main" .github/workflows/ci.yml; then
+elif grep -q "$ORG/relay/.github/workflows/ci.yml@main" .github/workflows/ci.yml; then
   pass "ci.yml uses Relay's reusable workflow"
-  if ! grep -q "$ORG/Relay/.github/workflows/shared-dependency-review.yml@main" .github/workflows/ci.yml; then
+  if ! grep -q "$ORG/relay/.github/workflows/shared-dependency-review.yml@main" .github/workflows/ci.yml; then
     warn "ci.yml does not call shared-dependency-review.yml"
   fi
-  if ! grep -q "$ORG/Relay/.github/workflows/shared-codeql.yml@main" .github/workflows/ci.yml; then
+  if ! grep -q "$ORG/relay/.github/workflows/shared-codeql.yml@main" .github/workflows/ci.yml; then
     warn "ci.yml does not call shared-codeql.yml"
   fi
 else

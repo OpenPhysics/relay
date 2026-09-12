@@ -70,7 +70,7 @@ mapfile -t NPM_REPOS < <(
   jq -r '
     .repos[]
     | select(
-        .name != "Relay" and .name != ".github" and
+        .name != "relay" and .name != ".github" and
         ((.language // []) | any(. == "JavaScript" or . == "TypeScript"))
       )
     | .name
@@ -89,7 +89,7 @@ echo "Workspace: $WORKSPACE"
 
 # Relay itself ships a package.json with devDeps → npm config. Gated so a
 # scoped run (specific repos named) doesn't dirty Relay's working tree.
-self_wants "Relay" && sync_file "$CONFIG_DIR/dependabot-npm.yml" "$REPO_ROOT/.github/dependabot.yml"
+self_wants "relay" && sync_file "$CONFIG_DIR/dependabot-npm.yml" "$REPO_ROOT/.github/dependabot.yml"
 
 # The .github org-profile repo is actions-only (no package.json).
 self_wants ".github" && sync_file "$CONFIG_DIR/dependabot-actions.yml" "$WORKSPACE/.github/.github/dependabot.yml"

@@ -60,7 +60,7 @@ setup() {
 }
 
 @test "ci.yml not calling Relay's reusable workflow warns" {
-  sed -i "s|$(fleet_org)/Relay/.github/workflows/ci.yml@main|some/other/workflow.yml@main|" "$REPO/.github/workflows/ci.yml"
+  sed -i "s|$(fleet_org)/relay/.github/workflows/ci.yml@main|some/other/workflow.yml@main|" "$REPO/.github/workflows/ci.yml"
   run_compliance "$REPO"
   assert_success
   assert_output --partial "ci.yml exists but does not call $(fleet_org)/Relay's reusable workflow"

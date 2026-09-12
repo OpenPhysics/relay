@@ -14,7 +14,7 @@ the apply script in this repo instead.
 ## Quick use
 
 ```bash
-cd Relay
+cd relay
 
 # After adding a new repo to the catalog (or anytime you suspect drift)
 scripts/sync-github-settings.sh --check --repo MyNewRepo

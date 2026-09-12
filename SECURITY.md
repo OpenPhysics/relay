@@ -3,7 +3,7 @@
 ## Supported versions
 
 Security fixes are applied to the default branch (`main`) of active OpenPhysics
-repositories listed in [structure/repos.json](https://github.com/OpenPhysics/Relay/blob/main/structure/repos.json).
+repositories listed in [structure/repos.json](https://github.com/OpenPhysics/relay/blob/main/structure/repos.json).
 
 ## Reporting a vulnerability
 

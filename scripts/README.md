@@ -101,7 +101,7 @@ Run any git command across every catalog repo already checked out locally:
 
 ```bash
 # put on PATH once (if ~/.local/bin is already there)
-ln -sfn ~/OpenPhysics/Relay/scripts/fleet ~/.local/bin/fleet
+ln -sfn ~/OpenPhysics/relay/scripts/fleet ~/.local/bin/fleet
 
 fleet push
 fleet pull --ff-only
