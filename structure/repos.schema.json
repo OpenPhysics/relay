@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "repos.schema.json",
+  "title": "Repository catalog",
+  "description": "Machine-readable catalog of the organization's repositories. Consumed by bootstrap, fleet scripts, and compliance tooling.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "organization", "repos"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional pointer to this schema file (relative or absolute)."
+    },
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Catalog schema semver. Bump when field semantics change."
+    },
+    "organization": {
+      "type": "string",
+      "minLength": 1,
+      "description": "GitHub organization login. The single source of truth for the org name across all fleet tooling."
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable organization name for docs and headings. Defaults to organization when absent."
+    },
+    "pagesBase": {
+      "type": ["string", "null"],
+      "pattern": "^https://[^/]+$",
+      "description": "Base URL for GitHub Pages sites, no trailing slash (e.g. https://<org>.github.io). Optional — only set once a repo actually publishes Pages."
+    },
+    "repos": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/repo" }
+    }
+  },
+  "$defs": {
+    "repo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "displayName",
+        "type",
+        "language",
+        "description",
+        "status"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "GitHub repository name (and sibling workspace folder)."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable title for docs and catalog listings."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["app", "library", "tool", "config", "template"],
+          "description": "app = end-user runnable software; library = published/importable package; tool = org tooling (e.g. this repo); config = settings-only repo (e.g. .github); template = seed repo for new members."
+        },
+        "language": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true,
+          "description": "Primary implementation language(s), e.g. [\"TypeScript\"] or [\"Python\"]."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Full blurb for docs and catalog listings."
+        },
+        "shortDescription": {
+          "description": "Optional GitHub About blurb (≤350 chars). When omitted, sync-github-metadata uses description (truncated if needed).",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 350
+        },
+        "deployedUrl": {
+          "description": "Live/published URL override (Pages site, npm/PyPI package page, demo, etc). Omit when there is no override; null means explicitly not deployed.",
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "string",
+              "pattern": "^https://"
+            }
+          ]
+        },
+        "githubTopics": {
+          "type": "array",
+          "description": "GitHub topics to apply via sync-github-metadata. Kebab-case only.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50,
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "template", "draft", "wip", "archived"],
+          "description": "active = maintained and CI-checked by fleet-health; draft/wip = in catalog but not yet shipped; archived = retained history; template = seed repo."
+        }
+      }
+    }
+  }
+}

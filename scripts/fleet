@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# Run a git command across every fleet repo checked out locally.
+#
+# Memorable shortcuts for the fleet-git one-liners in doc/fleet-git.md:
+#   fleet push
+#   fleet pull --ff-only
+#   fleet status -s
+#   fleet --type library log -1 --oneline
+set -euo pipefail
+
+# Resolve symlinks so `~/.local/bin/fleet` still finds sibling scripts.
+SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$SOURCE" ]]; do
+  DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ "$SOURCE" != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+
+usage() {
+  cat <<'EOF'
+Usage: fleet [filters] <git-args...>
+
+Run a git command in every catalog repo that exists locally beside Relay.
+
+Filters (same as parse-repos.sh):
+  --type TYPE         Filter by repos.json type field (app|library|tool|config|template)
+  --status STATUS     Filter by status (active|template|draft|wip|archived)
+  --catalog PATH      Override path to repos.json
+  -h, --help          Show this help
+
+Examples:
+  fleet push
+  fleet pull --ff-only
+  fleet status -s
+  fleet fetch --all --prune
+  fleet --type library log -1 --oneline
+  fleet --type tool branch -vv
+
+See also: doc/fleet-git.md, scripts/clone-fleet.sh, scripts/fleet-exec.sh
+EOF
+}
+
+FILTER_ARGS=()
+GIT_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --type|--status|--catalog)
+      if [[ $# -lt 2 ]]; then
+        echo "Missing value for $1" >&2
+        usage >&2
+        exit 2
+      fi
+      FILTER_ARGS+=("$1" "$2")
+      shift 2
+      ;;
+    --)
+      shift
+      GIT_ARGS+=("$@")
+      break
+      ;;
+    -*)
+      # Unknown dashed arg: treat as the start of git args (e.g. fleet -C is wrong;
+      # fleet status -s is handled once we leave the filter loop).
+      GIT_ARGS+=("$@")
+      break
+      ;;
+    *)
+      GIT_ARGS+=("$@")
+      break
+      ;;
+  esac
+done
+
+if [[ ${#GIT_ARGS[@]} -eq 0 ]]; then
+  usage >&2
+  exit 2
+fi
+
+FAILED=0
+while IFS= read -r p; do
+  [[ -z "$p" ]] && continue
+  printf '\n\033[1m== %s ==\033[0m\n' "$(basename "$p")"
+  if ! git -C "$p" "${GIT_ARGS[@]}"; then
+    FAILED=1
+  fi
+done < <("$SCRIPT_DIR/parse-repos.sh" paths --require-local "${FILTER_ARGS[@]}")
+
+exit "$FAILED"

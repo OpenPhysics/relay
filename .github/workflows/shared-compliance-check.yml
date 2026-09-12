@@ -1,0 +1,139 @@
+name: Shared compliance check
+
+on:
+  workflow_call:
+    inputs:
+      repo-name:
+        description: Repository name to check (defaults to calling repository)
+        type: string
+        required: false
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  check-single:
+    # When invoked via `uses:` the event is the caller's (push/pull_request/schedule),
+    # never 'workflow_call'; run for those. The fleet-audit path below only makes
+    # sense in Relay itself (it needs structure/repos.json), so dispatch/schedule in
+    # any other repo — e.g. a sim's weekly cron — takes the single-repo path too.
+    if: github.repository != format('{0}/Relay', github.repository_owner) || (github.event_name != 'workflow_dispatch' && github.event_name != 'schedule')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository under test
+        uses: actions/checkout@v7.0.1
+
+      # The compliance script lives in this orchestration repo (Relay), not in the
+      # caller, so check it out alongside and run it against the caller's working tree.
+      - name: Check out Relay for the compliance script
+        uses: actions/checkout@v7.0.1
+        with:
+          repository: ${{ github.repository_owner }}/Relay
+          path: .org-compliance
+
+      - name: Run compliance checks
+        run: |
+          REPO="${{ inputs.repo-name }}"
+          if [ -z "$REPO" ]; then
+            REPO="${{ github.event.repository.name }}"
+          fi
+          echo "Checking repository: $REPO"
+          GITHUB_REPOSITORY="${{ github.repository_owner }}/$REPO" \
+            bash .org-compliance/scripts/check-repo-compliance.sh "$PWD"
+
+  # Org-wide audit (dispatch/schedule). Fan out one repo per runner so they audit
+  # in parallel with isolated logs, mirroring fleet-health.yml: `discover` builds
+  # the repo list from the catalog, `audit` checks each, `report` aggregates pass/fail.
+  discover-all:
+    # Relay-only: the catalog (structure/repos.json) lives here, not in the callers.
+    if: github.repository == format('{0}/Relay', github.repository_owner) && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.list.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Build the repo matrix
+        id: list
+        run: |
+          set -euo pipefail
+          matrix=$(jq -c '[
+            .repos[]
+            | select(
+                .name != "Relay"
+                and (.status == "active" or .status == "draft" or .status == "wip")
+              )
+            | .name
+          ]' structure/repos.json)
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  audit:
+    needs: discover-all
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sim: ${{ fromJson(needs.discover-all.outputs.matrix) }}
+    steps:
+      - name: Check out Relay for the compliance script
+        uses: actions/checkout@v7.0.1
+
+      - name: Audit ${{ matrix.sim }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SIM: ${{ matrix.sim }}
+        run: |
+          set -uo pipefail
+          WORKDIR=$(mktemp -d)
+          if ! gh repo clone "${{ github.repository_owner }}/$SIM" "$WORKDIR" -- --depth 1 --quiet; then
+            echo "| $SIM | ❌ clone |" > "row-$SIM.md"
+            exit 1
+          fi
+          if GITHUB_REPOSITORY="${{ github.repository_owner }}/$SIM" ./scripts/check-repo-compliance.sh "$WORKDIR"; then
+            echo "| $SIM | ✅ |" > "row-$SIM.md"
+            rc=0
+          else
+            echo "| $SIM | ❌ |" > "row-$SIM.md"
+            rc=1
+          fi
+          rm -rf "$WORKDIR"
+          exit "$rc"
+
+      - name: Upload row
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: compliance-row-${{ matrix.sim }}
+          path: row-${{ matrix.sim }}.md
+          if-no-files-found: ignore
+
+  report-all:
+    needs: [discover-all, audit]
+    if: always() && github.repository == format('{0}/Relay', github.repository_owner) && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download rows
+        uses: actions/download-artifact@v8.0.1
+        with:
+          pattern: compliance-row-*
+          path: rows
+          merge-multiple: true
+
+      - name: Assemble report
+        run: |
+          set -euo pipefail
+          {
+            echo "# Fleet compliance report"
+            echo
+            echo "| Repo | Compliance |"
+            echo "|---|:--:|"
+            find rows -name '*.md' -exec cat {} + 2>/dev/null | sort || true
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if find rows -name '*.md' -exec cat {} + 2>/dev/null | grep -q '❌'; then
+            echo "One or more simulations failed compliance — see the table above." >&2
+            exit 1
+          fi

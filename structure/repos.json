@@ -1,0 +1,54 @@
+{
+  "$schema": "./repos.schema.json",
+  "schemaVersion": "1.0.0",
+  "organization": "OpenPhysics",
+  "displayName": "OpenPhysics",
+  "pagesBase": null,
+  "repos": [
+    {
+      "name": "Relay",
+      "displayName": "Relay",
+      "type": "tool",
+      "language": ["Shell", "JavaScript"],
+      "description": "Orchestration repository for the OpenPhysics organization: reusable CI/CD workflows, cross-repo automation scripts, Dependabot templates, and the machine-readable repository catalog.",
+      "githubTopics": ["orchestration", "tooling", "ci-cd"],
+      "status": "active"
+    },
+    {
+      "name": "pyro",
+      "displayName": "Pyro",
+      "type": "app",
+      "language": ["JavaScript"],
+      "description": "Browser-based VPython editor using CodeMirror 6 and GlowScript VPython 3.2. Write and run VPython code in the browser with live 3D visualization.",
+      "githubTopics": ["vpython", "glowscript", "codemirror", "physics-simulation"],
+      "status": "active"
+    },
+    {
+      "name": "pycd48",
+      "displayName": "pycd48",
+      "type": "library",
+      "language": ["Python"],
+      "description": "Python library for controlling the CD48 Coincidence Counter via USB serial. Supports Linux, macOS, and Windows.",
+      "githubTopics": ["physics", "hardware", "serial", "coincidence-counter"],
+      "status": "active"
+    },
+    {
+      "name": "jscd48-tmp",
+      "displayName": "jscd48",
+      "type": "library",
+      "language": ["JavaScript"],
+      "description": "JavaScript library for controlling the CD48 Coincidence Counter via the Web Serial API. Published to npm.",
+      "githubTopics": ["physics", "hardware", "web-serial", "coincidence-counter"],
+      "status": "active"
+    },
+    {
+      "name": "tscd48-tmp",
+      "displayName": "tscd48",
+      "type": "library",
+      "language": ["TypeScript"],
+      "description": "TypeScript library for controlling the CD48 Coincidence Counter via the Web Serial API. Published to npm.",
+      "githubTopics": ["physics", "hardware", "web-serial", "coincidence-counter"],
+      "status": "active"
+    }
+  ]
+}

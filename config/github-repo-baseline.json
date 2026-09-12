@@ -1,0 +1,52 @@
+{
+  "version": "1.0.0",
+  "description": "Canonical GitHub repository settings for every OpenPhysics catalog repo. New fleet members often inherit GitHub defaults — apply this baseline instead of copying settings from a mature repo by hand.",
+  "appliesTo": {
+    "primary": [
+      "app",
+      "library",
+      "tool",
+      "config",
+      "template"
+    ],
+    "notes": "Applies to every public catalog repo unless noted. Private repos get vulnerability alerts when possible; secret scanning / PVR may be unavailable without GitHub Advanced Security."
+  },
+  "repository": {
+    "has_issues": true,
+    "has_wiki": false,
+    "has_projects": false,
+    "has_downloads": false,
+    "allow_auto_merge": false,
+    "allow_update_branch": false,
+    "delete_branch_on_merge": false,
+    "web_commit_signoff_required": false,
+    "default_branch": "main",
+    "allow_squash_merge": true,
+    "allow_merge_commit": true,
+    "allow_rebase_merge": true,
+    "squash_merge_commit_title": "COMMIT_OR_PR_TITLE",
+    "squash_merge_commit_message": "COMMIT_MESSAGES",
+    "merge_commit_title": "MERGE_MESSAGE",
+    "merge_commit_message": "PR_TITLE"
+  },
+  "security": {
+    "vulnerability_alerts": true,
+    "dependabot_security_updates": "enabled",
+    "secret_scanning": "enabled",
+    "secret_scanning_push_protection": "enabled",
+    "secret_scanning_non_provider_patterns": "disabled",
+    "secret_scanning_validity_checks": "disabled",
+    "private_vulnerability_reporting": true
+  },
+  "pages": {
+    "build_type": "workflow",
+    "requiredWhen": "deployedUrl is set",
+    "notes": "Set Pages → Source to GitHub Actions. Description + homepage come from structure/repos.json via scripts/sync-github-metadata.sh."
+  },
+  "outOfScope": [
+    "Branch protection rules (org/policy dependent)",
+    "Code scanning default setup — repos use Relay's shared-codeql.yml instead",
+    "Org-level code-security configurations",
+    "Dependabot.yml file contents — see config/dependabot-*.yml + sync-dependabot.sh"
+  ]
+}

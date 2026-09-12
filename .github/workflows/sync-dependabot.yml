@@ -1,0 +1,31 @@
+name: Sync Dependabot config
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "config/dependabot-*.yml"
+      - "scripts/sync-dependabot.sh"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-templates:
+    name: Validate Dependabot templates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Check template files exist
+        run: |
+          set -euo pipefail
+          for file in config/dependabot-npm.yml config/dependabot-actions.yml config/dependabot-pip.yml; do
+            test -f "$file"
+            grep -q '^version: 2$' "$file"
+            grep -q '^updates:' "$file"
+          done
+
+      - name: Validate sync script syntax
+        run: bash -n scripts/sync-dependabot.sh

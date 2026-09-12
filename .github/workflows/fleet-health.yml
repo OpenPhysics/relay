@@ -1,0 +1,177 @@
+name: Fleet Health
+
+# Org-wide health check: clone every active npm repo and run the standard
+# pre-PR trio (lint, type-check, build), then publish a pass/fail table to the
+# job summary. Catches a repo that a shared-workflow or dependency change
+# quietly broke. Read-only — uses the default token to clone public repos.
+#
+# npm-only: it runs `npm ci`/`npm run <script>`, so only repos whose language
+# includes JavaScript or TypeScript are in scope (Python repos like pycd48
+# aren't covered here).
+#
+# Runs one repo per matrix job so they execute in parallel with isolated logs;
+# `discover` builds the repo list from the catalog and `report` aggregates the
+# per-repo rows into a single table.
+
+on:
+  schedule:
+    - cron: '0 7 * * 1' # Mondays 07:00 UTC, just after the 06:00 compliance audit
+  workflow_dispatch:
+    inputs:
+      repos:
+        description: 'Optional space/comma-separated repos to limit the run (default: all active npm repos)'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fleet-health
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.list.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Build the repo matrix
+        id: list
+        env:
+          ONLY: ${{ inputs.repos }}
+        run: |
+          set -euo pipefail
+          if [ -n "${ONLY:-}" ]; then
+            matrix=$(echo "$ONLY" | tr ', ' '\n' | sed '/^$/d' | jq -R . | jq -cs .)
+          else
+            matrix=$(jq -c '[
+              .repos[]
+              | select(
+                  .status == "active"
+                  and .name != "Relay"
+                  and ((.language // []) | any(. == "JavaScript" or . == "TypeScript"))
+                )
+              | .name
+            ]' structure/repos.json)
+          fi
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  health:
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sim: ${{ fromJson(needs.discover.outputs.matrix) }}
+    steps:
+      - uses: actions/setup-node@v7.0.0
+        with:
+          # Mirrors the fleet Node default — bump all setup-node workflows together.
+          # See Relay/README.md ("Node version").
+          node-version: '24'
+
+      # Sims are cloned into a mktemp dir, so setup-node's lockfile-based cache does
+      # not apply. Cache the shared ~/.npm download dir per sim so repeat runs skip
+      # re-downloading the (largely shared) dependency set. The run_id in the primary
+      # key makes every run save a fresh entry while restore-keys reuses the last one.
+      - name: Cache npm downloads
+        uses: actions/cache@v6.1.0
+        with:
+          path: ~/.npm
+          key: fleet-health-npm-${{ runner.os }}-${{ matrix.sim }}-${{ github.run_id }}
+          restore-keys: |
+            fleet-health-npm-${{ runner.os }}-${{ matrix.sim }}-
+            fleet-health-npm-${{ runner.os }}-
+
+      - name: Lint / type-check / build / test ${{ matrix.sim }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SIM: ${{ matrix.sim }}
+        run: |
+          set -uo pipefail
+
+          icon() { case "$1" in 0) printf '✅' ;; 1) printf '❌' ;; 2) printf '—' ;; esac; }
+
+          # Run an npm script if the repo defines it: 0 pass, 1 fail, 2 absent.
+          run_script() {
+            local dir="$1" name="$2"
+            if ! jq -e --arg s "$name" '.scripts[$s] // empty' "$dir/package.json" >/dev/null 2>&1; then
+              return 2
+            fi
+            ( cd "$dir" && npm run "$name" >/dev/null 2>&1 ) && return 0 || return 1
+          }
+
+          dir="$(mktemp -d)"
+          row=""
+          status=0
+
+          if ! gh repo clone "${{ github.repository_owner }}/$SIM" "$dir" -- --depth 1 --quiet; then
+            row="| $SIM | ❌ clone | — | — | — | — |"
+            status=1
+          else
+            # Reproducible install when a lockfile is present; fall back otherwise.
+            if [ -f "$dir/package-lock.json" ]; then
+              ( cd "$dir" && npm ci --no-audit --no-fund >/dev/null 2>&1 ) && inst=0 || inst=1
+            else
+              ( cd "$dir" && npm install --no-audit --no-fund >/dev/null 2>&1 ) && inst=0 || inst=1
+            fi
+
+            if [ "$inst" -ne 0 ]; then
+              row="| $SIM | $(icon 1) | — | — | — | — |"
+              status=1
+            else
+              run_script "$dir" lint;  case $? in 0) lint=0 ;; 2) lint=2 ;; *) lint=1; status=1 ;; esac
+              run_script "$dir" check; case $? in 0) chk=0 ;; 2) chk=2 ;; *) chk=1; status=1 ;; esac
+              run_script "$dir" build; case $? in 0) bld=0 ;; 2) bld=2 ;; *) bld=1; status=1 ;; esac
+              run_script "$dir" test;  case $? in 0) tst=0 ;; 2) tst=2 ;; *) tst=1; status=1 ;; esac
+              row="| $SIM | $(icon "$inst") | $(icon "$lint") | $(icon "$chk") | $(icon "$bld") | $(icon "$tst") |"
+            fi
+          fi
+
+          rm -rf "$dir"
+          echo "$row" > "row-$SIM.md"
+          echo "$row"
+          exit "$status"
+
+      - name: Upload row
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: health-row-${{ matrix.sim }}
+          path: row-${{ matrix.sim }}.md
+          if-no-files-found: ignore
+
+  report:
+    needs: [discover, health]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download rows
+        uses: actions/download-artifact@v8.0.1
+        with:
+          pattern: health-row-*
+          path: rows
+          merge-multiple: true
+
+      - name: Assemble report
+        run: |
+          set -euo pipefail
+          {
+            echo "# Fleet health report"
+            echo
+            echo "| Repo | Install | Lint | Type-check | Build | Test |"
+            echo "|---|:--:|:--:|:--:|:--:|:--:|"
+            find rows -name '*.md' -exec cat {} + 2>/dev/null | sort || true
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Fail the run if any sim reported a failure.
+          if find rows -name '*.md' -exec cat {} + 2>/dev/null | grep -q '❌'; then
+            echo "One or more simulations failed — see the table above." >&2
+            exit 1
+          fi

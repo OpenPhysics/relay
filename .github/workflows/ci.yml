@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        # Default Node version for the fleet. Mirrored in every Relay workflow that
+        # runs setup-node — bump them together (enforced by check-node-version.sh).
+        # See Relay/README.md ("Node version").
+        type: string
+        default: "24"
+      run-tests:
+        # Tri-state: "true" forces the test step on, "false" forces it off, and the
+        # default "" means auto — run tests when the repo defines a "test" npm script.
+        # String (not boolean) so "unset" is distinguishable from "off".
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+# No concurrency block here: this workflow is workflow_call-only, and callers
+# already define the ci-${{ github.workflow }}-${{ github.ref }} group. Declaring
+# the same group in the called workflow makes GitHub detect a deadlock with the
+# caller's run and kill the reusable call at startup, so the build never runs.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Security audit
+        # Must stay fully qualified: `uses:` accepts no expressions, and inside a
+        # reusable workflow a local `./` path resolves against the CALLER's
+        # checkout, not this repo. Renaming the org means editing this line.
+        uses: OpenPhysics/Relay/.github/actions/security-audit@main
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run check
+
+      # Auto-run when the caller defines a "test" npm script; force on/off via
+      # run-tests "true"/"false". Callers without a test script stay green
+      # without per-repo config.
+      - name: Test
+        if: inputs.run-tests != 'false'
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.run-tests }}" = "true" ]; then
+            npm test
+          elif jq -e '.scripts.test // empty' package.json >/dev/null 2>&1; then
+            npm test
+          else
+            echo "No \"test\" script defined and run-tests not forced; skipping."
+          fi
+
+      - name: Build
+        run: npm run build

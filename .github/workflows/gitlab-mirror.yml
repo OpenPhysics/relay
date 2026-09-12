@@ -1,0 +1,97 @@
+name: GitLab mirror
+
+# Push every catalog repository's git history to the GitLab backup group.
+# Git data only — branches, tags, commits. Issues, pull requests, Actions, and
+# Pages stay on GitHub and are switched off on the GitLab side.
+#
+# Needs a GITLAB_TOKEN repository secret (api + write_repository scopes). Without
+# it the run logs a notice and exits cleanly, so the workflow is harmless until
+# the backup is set up. Full write-up: doc/gitlab-mirror.md.
+#
+# Runs are stateless: each run re-clones from GitHub into a scratch dir, but the
+# push itself is incremental — git only sends objects GitLab does not have.
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # daily 04:00 UTC
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'sync (create + push), check (report only), or dry-run'
+        type: choice
+        options: [sync, check, dry-run]
+        default: sync
+      target:
+        description: 'Which repos to mirror'
+        type: choice
+        options: [all, library, app, tool]
+        default: all
+      only:
+        description: 'Optional single repo name (overrides target)'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gitlab-mirror
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Check for the GitLab token
+        id: token
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          if [ -z "${GITLAB_TOKEN:-}" ]; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::GITLAB_TOKEN is not set — skipping. See doc/gitlab-mirror.md to enable the backup."
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Mirror to GitLab
+        if: steps.token.outputs.present == 'true'
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_HOST: ${{ vars.GITLAB_HOST || 'https://gitlab.com' }}
+          GITLAB_GROUP: ${{ vars.GITLAB_GROUP || github.repository_owner }}
+          GITLAB_VISIBILITY: ${{ vars.GITLAB_VISIBILITY || 'private' }}
+          # Reading the (public) source repos; keeps clones off the anonymous rate limit.
+          GH_TOKEN: ${{ github.token }}
+          MODE: ${{ inputs.mode || 'sync' }}
+          TARGET: ${{ inputs.target || 'all' }}
+          ONLY: ${{ inputs.only }}
+        run: |
+          set -euo pipefail
+          args=(--work-dir "$RUNNER_TEMP/gitlab-mirror")
+          case "$MODE" in
+            check) args+=(--check) ;;
+            dry-run) args+=(--dry-run) ;;
+          esac
+          if [ -n "${ONLY:-}" ]; then
+            args+=(--only "$ONLY")
+          elif [ "$TARGET" != "all" ]; then
+            args+=(--type "$TARGET")
+          fi
+          scripts/sync-gitlab-mirror.sh "${args[@]}" | tee "$RUNNER_TEMP/mirror.log"
+
+      - name: Summary
+        if: always() && steps.token.outputs.present == 'true'
+        run: |
+          {
+            echo "# GitLab mirror"
+            echo
+            echo '```'
+            tail -n 60 "$RUNNER_TEMP/mirror.log" 2>/dev/null || echo "no output"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

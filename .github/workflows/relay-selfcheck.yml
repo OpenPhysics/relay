@@ -1,0 +1,66 @@
+name: Relay self-check
+
+# Validates Relay's own invariants — the fleet Node version agrees across
+# workflows, the repository catalog matches its JSON Schema, no org repo is
+# missing from the catalog, and the helper scripts are syntactically valid.
+# These guard against the kind of drift that otherwise rots silently as the
+# repo grows.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "structure/**"
+      - ".github/workflows/**"
+      - ".github/actions/**"
+  pull_request:
+    paths:
+      - "scripts/**"
+      - "structure/**"
+      - ".github/workflows/**"
+      - ".github/actions/**"
+
+permissions:
+  contents: read
+
+jobs:
+  selfcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Validate the repository catalog
+        run: |
+          pip install --quiet jsonschema
+          scripts/check-repos-catalog.sh
+
+      - name: Check fleet Node version is in sync
+        run: scripts/check-node-version.sh
+
+      - name: Detect uncataloged repos
+        # Compare the live GitHub org against structure/repos.json so a repo that
+        # was created on GitHub but never onboarded can't stay invisible to the
+        # fleet tooling. Read-only; the default token can list public org repos.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/check-uncataloged.sh
+
+      - name: Lint shell scripts (syntax)
+        run: |
+          set -euo pipefail
+          find scripts -name '*.sh' -print0 | while IFS= read -r -d '' s; do
+            echo "bash -n $s"
+            bash -n "$s"
+          done
+
+      - name: Lint shell scripts (shellcheck)
+        # ubuntu-latest ships shellcheck. -x follows `source` into lib/repos.sh.
+        # SC2034 is excluded: caller scripts set FILTER_*/REPOS_JSON globals that
+        # are read inside the sourced lib's functions, which shellcheck can't track
+        # across that boundary and wrongly reports as unused.
+        run: |
+          set -euo pipefail
+          find scripts -name '*.sh' -print0 \
+            | xargs -0 shellcheck -x -S warning -e SC2034

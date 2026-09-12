@@ -1,0 +1,69 @@
+name: Security audit
+description: >
+  Run `npm audit` and write a summary. Fails only on high/critical vulnerabilities in
+  DIRECT dependencies; transitive-only highs/criticals are reported as a non-blocking
+  warning so one upstream advisory does not red-wall every sim at once.
+
+inputs:
+  audit-level:
+    description: Minimum severity reported in the summary
+    default: moderate
+
+runs:
+  using: composite
+  steps:
+    - name: npm audit (direct deps blocking)
+      shell: bash
+      env:
+        AUDIT_LEVEL: ${{ inputs.audit-level }}
+      run: |
+        echo "## Security Audit Results" >> "$GITHUB_STEP_SUMMARY"
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+
+        # Keep the audit payload out of the workspace. Writing audit.json into the
+        # checkout made `biome check .` fail on Dependabot (and any other) PRs
+        # whenever npm's JSON formatting disagreed with Biome's formatter.
+        AUDIT_FILE="${RUNNER_TEMP:-/tmp}/npm-audit.json"
+        npm audit --audit-level="$AUDIT_LEVEL" --json > "$AUDIT_FILE" || true
+        export AUDIT_FILE
+        node <<'NODE'
+        const fs = require( 'fs' );
+        const summary = process.env.GITHUB_STEP_SUMMARY;
+        const auditPath = process.env.AUDIT_FILE;
+        const audit = JSON.parse( fs.readFileSync( auditPath, 'utf8' ) );
+        const counts = audit.metadata?.vulnerabilities ?? {};
+        const lines = [
+          `- Total: ${counts.total ?? 0}`,
+          `- Moderate: ${counts.moderate ?? 0}`,
+          `- High: ${counts.high ?? 0}`,
+          `- Critical: ${counts.critical ?? 0}`
+        ];
+        fs.appendFileSync( summary, `${lines.join( '\n' )}\n` );
+
+        // Only fail the build for high/critical vulnerabilities in DIRECT
+        // dependencies. Transitive-only highs/criticals (e.g. an upstream
+        // advisory against a dep pulled in by vite/tsx) are reported as a
+        // non-blocking warning so a single ecosystem advisory does not red-wall
+        // every sim at once. Resolve them via the offending dep's update.
+        const vulns = audit.vulnerabilities ?? {};
+        const direct = [];
+        const transitive = [];
+        for ( const [ name, info ] of Object.entries( vulns ) ) {
+          if ( info.severity !== 'high' && info.severity !== 'critical' ) {
+            continue;
+          }
+          ( info.isDirect ? direct : transitive ).push( `${name} (${info.severity})` );
+        }
+
+        if ( transitive.length > 0 ) {
+          fs.appendFileSync( summary, `\n⚠️ Transitive high/critical vulnerabilities (non-blocking): ${transitive.join( ', ' )}\n` );
+        }
+        if ( direct.length > 0 ) {
+          fs.appendFileSync( summary, `\n❌ Direct high/critical vulnerabilities: ${direct.join( ', ' )}\n` );
+          process.exit( 1 );
+        }
+        if ( ( counts.total ?? 0 ) === 0 ) {
+          fs.appendFileSync( summary, 'No vulnerabilities found at moderate severity or above.\n' );
+        }
+        NODE
+        rm -f "$AUDIT_FILE"

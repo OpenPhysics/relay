@@ -1,0 +1,54 @@
+name: Deploy to GitHub Pages
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        # Mirrors the fleet Node default — bump all setup-node workflows together.
+        # See Relay/README.md ("Node version").
+        type: string
+        default: "24"
+      dist-path:
+        type: string
+        default: "dist"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v6.0.0
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: ${{ inputs.dist-path }}
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5.0.1
