@@ -26,7 +26,7 @@ source "$SCRIPT_DIR/lib/repos.sh"
 ORG="${FLEET_ORG:-${OPENPHYSICS_ORG:-$(repos_org)}}"
 BRANCH="chore/fleet-update"
 TITLE=""
-BODY="Automated fleet change opened by Relay's fleet-exec runner."
+BODY="Automated fleet change opened by relay's fleet-exec runner."
 COMMIT_MSG=""
 APPLY=0
 KEEP=0

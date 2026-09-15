@@ -4,13 +4,13 @@ Cross-repo **writes** — pushing branches and opening PRs in other OpenPhysics 
 [`fleet-exec.yml`](../.github/workflows/fleet-exec.yml) / [`scripts/fleet-exec.sh`](../scripts/fleet-exec.sh)
 with `--apply` — need a token with write access to **those** repos.
 
-The workflow's default `GITHUB_TOKEN` is scoped to Relay only, so it can clone public repos
+The workflow's default `GITHUB_TOKEN` is scoped to relay only, so it can clone public repos
 (enough for dry-runs and the read-only [`fleet-health.yml`](../.github/workflows/fleet-health.yml)
 and compliance audits) but **cannot** push to or open PRs in the sim repos. For that, supply a
 broader token.
 
 ```
-fleet-exec --apply  ─uses→  GH_TOKEN  ─prefers→  secrets.FLEET_PAT  ─else→  github.token (Relay-only, read)
+fleet-exec --apply  ─uses→  GH_TOKEN  ─prefers→  secrets.FLEET_PAT  ─else→  github.token (relay-only, read)
 ```
 
 You have two options. A **fine-grained PAT** is the quickest; a **GitHub App** is the more robust
@@ -33,14 +33,14 @@ choice for ongoing org-wide automation (short-lived tokens, not tied to a person
      - **Workflows** → **Read and write** *only* if a fleet change will edit files under
        `.github/workflows/` in the target repos (GitHub rejects workflow edits otherwise).
    - **Expiration**: pick a finite window (e.g. 90 days) and set a rotation reminder.
-3. Add it as a Relay repository secret named **`FLEET_PAT`**:
+3. Add it as a relay repository secret named **`FLEET_PAT`**:
 
    ```bash
    gh secret set FLEET_PAT --repo OpenPhysics/relay
    # paste the token when prompted
    ```
 
-   Or via the UI: **Relay → Settings → Secrets and variables → Actions → New repository secret**,
+   Or via the UI: **relay → Settings → Secrets and variables → Actions → New repository secret**,
    name `FLEET_PAT`.
 
 That's it — `fleet-exec.yml` already reads `secrets.FLEET_PAT`. Org PAT policies must allow
@@ -59,7 +59,7 @@ scopes cleanly to the installed repos.
      (+ Workflows → Read and write only if editing workflow files).
    - No webhook needed.
 2. **Install** the app on the OpenPhysics repos you want to target.
-3. Generate a **private key** and store two secrets on Relay:
+3. Generate a **private key** and store two secrets on relay:
 
    ```bash
    gh secret set FLEET_APP_ID      --repo OpenPhysics/relay   # the app's numeric ID
@@ -107,9 +107,9 @@ scopes cleanly to the installed repos.
 3. **Apply to one repo** as a smoke test with `--only` (or the `only` workflow input), then re-run
    with `apply` enabled. Verify one PR opens before scaling up.
 
-## Editing Relay's own workflows
+## Editing relay's own workflows
 
-Pushing changes to files under `.github/workflows/` in **Relay itself** (e.g. editing
+Pushing changes to files under `.github/workflows/` in **relay itself** (e.g. editing
 `fleet-exec.yml`) requires your local `gh`/git token to carry the **`workflow`** OAuth scope —
 GitHub rejects the push otherwise (`refusing to allow an OAuth App to … workflow … without
 workflow scope`). Add it once:
@@ -119,7 +119,7 @@ gh auth refresh -h github.com -s workflow
 ```
 
 This is separate from `FLEET_PAT` (which governs writes to the *target* sim repos); it only affects
-pushing workflow edits to Relay from your machine.
+pushing workflow edits to relay from your machine.
 
 ## Safety notes
 

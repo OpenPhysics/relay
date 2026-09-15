@@ -59,11 +59,11 @@ setup() {
   assert_output --partial "WARN: .github/workflows/ci.yml is missing"
 }
 
-@test "ci.yml not calling Relay's reusable workflow warns" {
+@test "ci.yml not calling relay's reusable workflow warns" {
   sed -i "s|$(fleet_org)/relay/.github/workflows/ci.yml@main|some/other/workflow.yml@main|" "$REPO/.github/workflows/ci.yml"
   run_compliance "$REPO"
   assert_success
-  assert_output --partial "ci.yml exists but does not call $(fleet_org)/Relay's reusable workflow"
+  assert_output --partial "ci.yml exists but does not call $(fleet_org)/relay's reusable workflow"
 }
 
 @test "ci.yml without shared-dependency-review warns" {

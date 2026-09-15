@@ -4,9 +4,9 @@ on:
   workflow_call:
     inputs:
       node-version:
-        # Default Node version for the fleet. Mirrored in every Relay workflow that
+        # Default Node version for the fleet. Mirrored in every relay workflow that
         # runs setup-node — bump them together (enforced by check-node-version.sh).
-        # See Relay/README.md ("Node version").
+        # See relay/README.md ("Node version").
         type: string
         default: "24"
       run-tests:

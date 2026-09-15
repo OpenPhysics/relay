@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Tooling for the OpenPhysics org orchestration repo (Relay): repo metadata helpers and the shared compliance/catalog scripts.",
+  "description": "Tooling for the OpenPhysics org orchestration repo (relay): repo metadata helpers and the shared compliance/catalog scripts.",
   "scripts": {
     "test": "bats tests/*.bats"
   },

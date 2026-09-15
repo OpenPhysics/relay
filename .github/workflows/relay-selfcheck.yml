@@ -1,6 +1,6 @@
-name: Relay self-check
+name: relay self-check
 
-# Validates Relay's own invariants — the fleet Node version agrees across
+# Validates relay's own invariants — the fleet Node version agrees across
 # workflows, the repository catalog matches its JSON Schema, no org repo is
 # missing from the catalog, and the helper scripts are syntactically valid.
 # These guard against the kind of drift that otherwise rots silently as the

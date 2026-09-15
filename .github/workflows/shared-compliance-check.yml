@@ -18,7 +18,7 @@ jobs:
   check-single:
     # When invoked via `uses:` the event is the caller's (push/pull_request/schedule),
     # never 'workflow_call'; run for those. The fleet-audit path below only makes
-    # sense in Relay itself (it needs structure/repos.json), so dispatch/schedule in
+    # sense in relay itself (it needs structure/repos.json), so dispatch/schedule in
     # any other repo — e.g. a sim's weekly cron — takes the single-repo path too.
     if: github.repository != format('{0}/relay', github.repository_owner) || (github.event_name != 'workflow_dispatch' && github.event_name != 'schedule')
     runs-on: ubuntu-latest
@@ -26,9 +26,9 @@ jobs:
       - name: Check out the repository under test
         uses: actions/checkout@v7.0.1
 
-      # The compliance script lives in this orchestration repo (Relay), not in the
+      # The compliance script lives in this orchestration repo (relay), not in the
       # caller, so check it out alongside and run it against the caller's working tree.
-      - name: Check out Relay for the compliance script
+      - name: Check out relay for the compliance script
         uses: actions/checkout@v7.0.1
         with:
           repository: ${{ github.repository_owner }}/relay
@@ -48,7 +48,7 @@ jobs:
   # in parallel with isolated logs, mirroring fleet-health.yml: `discover` builds
   # the repo list from the catalog, `audit` checks each, `report` aggregates pass/fail.
   discover-all:
-    # Relay-only: the catalog (structure/repos.json) lives here, not in the callers.
+    # relay-only: the catalog (structure/repos.json) lives here, not in the callers.
     if: github.repository == format('{0}/relay', github.repository_owner) && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
     runs-on: ubuntu-latest
     outputs:
@@ -78,7 +78,7 @@ jobs:
       matrix:
         sim: ${{ fromJson(needs.discover-all.outputs.matrix) }}
     steps:
-      - name: Check out Relay for the compliance script
+      - name: Check out relay for the compliance script
         uses: actions/checkout@v7.0.1
 
       - name: Audit ${{ matrix.sim }}

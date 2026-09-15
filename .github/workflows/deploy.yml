@@ -5,7 +5,7 @@ on:
     inputs:
       node-version:
         # Mirrors the fleet Node default — bump all setup-node workflows together.
-        # See Relay/README.md ("Node version").
+        # See relay/README.md ("Node version").
         type: string
         default: "24"
       dist-path:

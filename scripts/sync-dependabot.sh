@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Sync canonical Dependabot configs from Relay/config/ to the fleet repositories.
+# Sync canonical Dependabot configs from relay/config/ to the fleet repositories.
 #
 # Targets are read from structure/repos.json (not a hardcoded list):
-#   - Relay itself          → config/dependabot-npm.yml (Relay ships a package.json with devDeps)
+#   - relay itself          → config/dependabot-npm.yml (relay ships a package.json with devDeps)
 #   - .github (org profile) → config/dependabot-actions.yml (actions-only; no package.json)
 #   - repos with language "JavaScript" or "TypeScript" → config/dependabot-npm.yml
 #   - repos with language "Python"                     → config/dependabot-pip.yml
@@ -42,8 +42,8 @@ wants() {
   return 1
 }
 
-# Like wants(), but for Relay's own file and the .github org profile. When a
-# caller names specific repos, a scoped run must never silently dirty Relay or
+# Like wants(), but for relay's own file and the .github org profile. When a
+# caller names specific repos, a scoped run must never silently dirty relay or
 # .github as a side effect — only touch them when they are explicitly named or
 # no filter was given (the whole-fleet case).
 self_wants() {
@@ -87,8 +87,8 @@ echo "Catalog: $CATALOG"
 echo "Workspace: $WORKSPACE"
 [ "$DRY_RUN" -eq 1 ] && echo "(dry-run — no files written)"
 
-# Relay itself ships a package.json with devDeps → npm config. Gated so a
-# scoped run (specific repos named) doesn't dirty Relay's working tree.
+# relay itself ships a package.json with devDeps → npm config. Gated so a
+# scoped run (specific repos named) doesn't dirty relay's working tree.
 self_wants "relay" && sync_file "$CONFIG_DIR/dependabot-npm.yml" "$REPO_ROOT/.github/dependabot.yml"
 
 # The .github org-profile repo is actions-only (no package.json).

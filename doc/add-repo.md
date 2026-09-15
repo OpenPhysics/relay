@@ -18,7 +18,7 @@ requires editing a script.
    scripts/clone-fleet.sh --only <Name>
    ```
 
-3. **Wire shared CI.** In the repo's `.github/workflows/ci.yml`, call Relay's
+3. **Wire shared CI.** In the repo's `.github/workflows/ci.yml`, call relay's
    reusable workflows (see the [README](../README.md#shared-ci) for the exact
    snippet). Add `.github/dependabot.yml` from
    [`config/dependabot-npm.yml`](../config/dependabot-npm.yml) or

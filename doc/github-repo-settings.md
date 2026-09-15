@@ -67,7 +67,7 @@ For repos with GitHub Pages (a `deployedUrl` / homepage):
 |---|---|
 | Build type | `workflow` (Source → GitHub Actions) |
 
-Code scanning **default setup** stays not-configured: repos use Relay's reusable
+Code scanning **default setup** stays not-configured: repos use relay's reusable
 [`shared-codeql.yml`](../.github/workflows/shared-codeql.yml) instead.
 
 ### Out of scope here

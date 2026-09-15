@@ -1,4 +1,4 @@
-# Shared bats helpers for the Relay script tests.
+# Shared bats helpers for the relay script tests.
 #
 # Loaded by every *.bats file via `load helpers/common`.
 
@@ -9,7 +9,7 @@ RELAY_ROOT="$(cd "${BATS_TEST_DIRNAME}/.." && pwd)"
 export RELAY_ROOT
 
 # The fleet Node major, read from the same place check-repo-compliance.sh reads it
-# (Relay's ci.yml `node-version` default). Fixtures derive their pins from this so
+# (relay's ci.yml `node-version` default). Fixtures derive their pins from this so
 # the suite survives a fleet Node bump.
 fleet_node_major() {
   grep -oP 'default:\s*["'\'']\K[0-9]+' "$RELAY_ROOT/.github/workflows/ci.yml" | head -n1

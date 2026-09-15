@@ -7,7 +7,7 @@
   "repos": [
     {
       "name": "relay",
-      "displayName": "Relay",
+      "displayName": "relay",
       "type": "tool",
       "language": ["Shell", "JavaScript"],
       "description": "Orchestration repository for the OpenPhysics organization: reusable CI/CD workflows, cross-repo automation scripts, Dependabot templates, and the machine-readable repository catalog.",
@@ -57,6 +57,26 @@
       "language": ["Python"],
       "description": "VPython-style 2D physics scenes that run natively in Jupyter.",
       "githubTopics": ["physics", "jupyter", "physics-simulation", "vpython"],
+      "status": "active"
+    },
+    {
+      "name": "feelTechFunctionGenerator",
+      "displayName": "FeelTech Function Generator",
+      "type": "app",
+      "language": ["TypeScript"],
+      "description": "Control a FeelTech FY3200S function generator from the browser over Web Serial.",
+      "deployedUrl": "https://openphysics.github.io/feelTechFunctionGenerator",
+      "githubTopics": ["web-serial", "function-generator", "physics", "hardware"],
+      "status": "active"
+    },
+    {
+      "name": "tektronixOscilloscope",
+      "displayName": "Tektronix Oscilloscope",
+      "type": "app",
+      "language": ["TypeScript"],
+      "description": "Capture waveforms from a Tektronix TBS1072B-EDU oscilloscope in the browser over WebUSB/USBTMC.",
+      "deployedUrl": "https://openphysics.github.io/tektronixOscilloscope",
+      "githubTopics": ["webusb", "oscilloscope", "physics", "hardware"],
       "status": "active"
     }
   ]

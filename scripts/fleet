@@ -21,7 +21,7 @@ usage() {
   cat <<'EOF'
 Usage: fleet [filters] <git-args...>
 
-Run a git command in every catalog repo that exists locally beside Relay.
+Run a git command in every catalog repo that exists locally beside relay.
 
 Filters (same as parse-repos.sh):
   --type TYPE         Filter by repos.json type field (app|library|tool|config|template)

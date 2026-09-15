@@ -1,6 +1,6 @@
-# OpenPhysics `Relay`
+# OpenPhysics `relay`
 
-Orchestration repository for the [OpenPhysics](https://github.com/OpenPhysics) organization. Relay owns
+Orchestration repository for the [OpenPhysics](https://github.com/OpenPhysics) organization. `relay` owns
 the **operational** side of the org: the reusable CI/CD workflows member repos call, the cross-repo
 automation scripts, the Dependabot templates, and the machine-readable repository catalog.
 
@@ -23,7 +23,7 @@ automation scripts, the Dependabot templates, and the machine-readable repositor
 | [`.github/workflows/fleet-health.yml`](.github/workflows/fleet-health.yml) | Weekly lint / type-check / build / test of every active npm repo, reported as a table |
 | [`.github/workflows/gitlab-mirror.yml`](.github/workflows/gitlab-mirror.yml) | Daily push of every repo's git history to the GitLab backup group |
 | [`.github/workflows/sync-dependabot.yml`](.github/workflows/sync-dependabot.yml) | Validate the Dependabot templates |
-| [`.github/workflows/relay-selfcheck.yml`](.github/workflows/relay-selfcheck.yml) | Validate Relay's own invariants (catalog schema, Node-version sync, script syntax) |
+| [`.github/workflows/relay-selfcheck.yml`](.github/workflows/relay-selfcheck.yml) | Validate relay's own invariants (catalog schema, Node-version sync, script syntax) |
 | [`scripts/`](scripts/) | Repo catalog tools, compliance checks, Dependabot/metadata sync ([`scripts/README.md`](scripts/README.md)) |
 | [`config/`](config/) | Canonical Dependabot and GitHub-repo-settings baselines |
 | [`structure/repos.json`](structure/repos.json) | Machine-readable catalog of org repositories |
@@ -34,6 +34,7 @@ automation scripts, the Dependabot templates, and the machine-readable repositor
 | [`doc/fleet-auth.md`](doc/fleet-auth.md) | Setting up the `FLEET_PAT` / GitHub App that lets `fleet-exec` open PRs |
 | [`doc/gitlab-mirror.md`](doc/gitlab-mirror.md) | GitLab backup mirror: setup, initial import, periodic sync, restore |
 | [`doc/codeql.md`](doc/codeql.md) | CodeQL setup and path-exclusion policy |
+| [`doc/biome-bumps.md`](doc/biome-bumps.md) | When bumping `@biomejs/biome`, also sync `biome.json` `$schema` |
 
 ## Shared CI
 
@@ -130,7 +131,7 @@ scripts/sync-github-settings.sh --check
 **Adding a repo**: see [`doc/add-repo.md`](doc/add-repo.md) — it's a `structure/repos.json` edit
 plus a few sync-script runs, no code generation involved.
 
-Scripts assume the `Relay` repo lives beside member repos in a shared workspace; set
+Scripts assume the `relay` repo lives beside member repos in a shared workspace; set
 `FLEET_WORKSPACE` or pass `--catalog /path/to/repos.json` if your checkout differs.
 
 ## Fleet operations
@@ -142,7 +143,7 @@ Cross-repo automation, all driven from the catalog:
   [`fleet-exec.yml`](.github/workflows/fleet-exec.yml) workflow exposes it as a manual dispatch
   (e.g. bump a shared dependency, run `npm run fix`, apply a codemod). Opening PRs in other
   repos needs a `FLEET_PAT` secret with write access — the default `GITHUB_TOKEN` is scoped to
-  Relay only. Setup steps (fine-grained PAT or GitHub App): [`doc/fleet-auth.md`](doc/fleet-auth.md).
+  relay only. Setup steps (fine-grained PAT or GitHub App): [`doc/fleet-auth.md`](doc/fleet-auth.md).
 - **Health report** — [`fleet-health.yml`](.github/workflows/fleet-health.yml) runs weekly,
   fanning out one matrix job per active npm repo (download cache reused across runs) to run
   lint, type-check, build, and test, then publishing a pass/fail table to the job summary.
@@ -163,7 +164,7 @@ Cross-repo automation, all driven from the catalog:
 
 ## Node version
 
-The default Node version for the npm side of the fleet is **`"24"`**, declared in every Relay
+The default Node version for the npm side of the fleet is **`"24"`**, declared in every relay
 workflow that runs `setup-node` — bump them together:
 
 - [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — `node-version` input default

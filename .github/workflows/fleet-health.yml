@@ -73,7 +73,7 @@ jobs:
       - uses: actions/setup-node@v7.0.0
         with:
           # Mirrors the fleet Node default — bump all setup-node workflows together.
-          # See Relay/README.md ("Node version").
+          # See relay/README.md ("Node version").
           node-version: '24'
 
       # Sims are cloned into a mktemp dir, so setup-node's lockfile-based cache does

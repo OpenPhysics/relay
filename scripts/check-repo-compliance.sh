@@ -4,7 +4,7 @@
 # Deliberately light: the fleet spans multiple languages and repo shapes (an
 # app, several libraries, this tool), so there is no single fixed file layout
 # to assert here. This checks what genuinely applies to every repo — CI
-# wiring to Relay's reusable workflows, Dependabot presence, Node-version
+# wiring to relay's reusable workflows, Dependabot presence, Node-version
 # consistency for npm repos, a README and license, and GitHub security
 # settings — and nothing narrower.
 set -euo pipefail
@@ -52,9 +52,9 @@ else
 fi
 
 if [ ! -f .github/workflows/ci.yml ]; then
-  warn ".github/workflows/ci.yml is missing (not yet wired to Relay's reusable CI)"
+  warn ".github/workflows/ci.yml is missing (not yet wired to relay's reusable CI)"
 elif grep -q "$ORG/relay/.github/workflows/ci.yml@main" .github/workflows/ci.yml; then
-  pass "ci.yml uses Relay's reusable workflow"
+  pass "ci.yml uses relay's reusable workflow"
   if ! grep -q "$ORG/relay/.github/workflows/shared-dependency-review.yml@main" .github/workflows/ci.yml; then
     warn "ci.yml does not call shared-dependency-review.yml"
   fi
@@ -62,7 +62,7 @@ elif grep -q "$ORG/relay/.github/workflows/ci.yml@main" .github/workflows/ci.yml
     warn "ci.yml does not call shared-codeql.yml"
   fi
 else
-  warn "ci.yml exists but does not call $ORG/Relay's reusable workflow"
+  warn "ci.yml exists but does not call $ORG/relay's reusable workflow"
 fi
 
 if [ -f package.json ]; then
@@ -72,7 +72,7 @@ if [ -f package.json ]; then
     warn ".github/dependabot.yml is missing for npm repository"
   fi
 
-  # Node engine / @types/node should track Relay's fleet Node major (ci.yml default).
+  # Node engine / @types/node should track relay's fleet Node major (ci.yml default).
   CI_YML="$RELAY_ROOT/.github/workflows/ci.yml"
   EXPECTED_NODE_MAJOR=""
   if [ -f "$CI_YML" ]; then

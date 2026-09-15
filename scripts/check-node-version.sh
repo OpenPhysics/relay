@@ -9,7 +9,7 @@
 #
 # Exits non-zero (and prints what disagrees) if the versions diverge.
 # Per-repo CI enforcement of engines/@types/node lives in check-repo-compliance.sh
-# (which derives the expected major from Relay's ci.yml).
+# (which derives the expected major from relay's ci.yml).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -61,9 +61,9 @@ FLEET_NODE_MAJOR="$uniq_versions"
 echo "OK: all workflows agree on Node $FLEET_NODE_MAJOR"
 echo "Expected member-repo pins: engines.node \">=${FLEET_NODE_MAJOR}\" and @types/node major ${FLEET_NODE_MAJOR}"
 
-# Optional workspace scan: when Relay lives beside sibling checkouts (local
+# Optional workspace scan: when relay lives beside sibling checkouts (local
 # bootstrap layout), assert catalog member pins match, for every sibling repo
-# that actually has a package.json. Skipped in Relay-only CI.
+# that actually has a package.json. Skipped in relay-only CI.
 PARENT="$(cd "$ROOT/.." && pwd)"
 CATALOG="$ROOT/structure/repos.json"
 checked=0

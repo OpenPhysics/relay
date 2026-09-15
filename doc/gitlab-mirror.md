@@ -25,7 +25,7 @@ not add.
 
 Direction is GitHub → GitLab, driven from our side. GitLab can pull-mirror an external repo on a
 schedule by itself, but that is a paid feature; pushing from here works on the free tier and keeps
-the schedule visible in Relay.
+the schedule visible in relay.
 
 ## One-time setup
 
@@ -80,7 +80,7 @@ ends with a summary. Exit status is non-zero if any repo failed.
 
 Re-run the same command — locally, or from
 [`.github/workflows/gitlab-mirror.yml`](../.github/workflows/gitlab-mirror.yml), which runs it
-daily at 04:00 UTC and on manual dispatch. For the workflow, add the token as a Relay repository
+daily at 04:00 UTC and on manual dispatch. For the workflow, add the token as a relay repository
 secret:
 
 ```bash

@@ -4,7 +4,7 @@
 # This is the counterpart to sync-dependabot.sh for the references that live in
 # prose and workflow files: CI badges, org LICENSE and CONTRIBUTING links, the
 # SECURITY.md catalog link, package.json repository URLs, Pages URLs, and the
-# `uses:` calls into Relay.
+# `uses:` calls into relay.
 #
 # The organization is read from structure/repos.json, so renaming the org is a
 # one-field edit followed by one run of this script:

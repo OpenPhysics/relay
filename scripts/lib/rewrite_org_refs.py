@@ -46,7 +46,7 @@ RULES = [
     # git@github.com:OWNER/FleetRepo...
     (re.compile(r"(git@github\.com:)(?:%s)(/(?:%s)\b)" % (owners, repos)),
      lambda m: m.group(1) + ORG + m.group(2)),
-    # Bare OWNER/FleetRepo - covers `uses: Org/Relay/.github/workflows/...`
+    # Bare OWNER/FleetRepo - covers `uses: Org/relay/.github/workflows/...`
     # and CODEOWNERS-style references.
     (re.compile(r"\b(?:%s)(/(?:%s)\b)" % (owners, repos)),
      lambda m: ORG + m.group(1)),

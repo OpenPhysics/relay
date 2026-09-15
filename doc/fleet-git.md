@@ -1,7 +1,7 @@
 # Fleet git commands
 
 Run everyday git operations across **every OpenPhysics repo checked out locally** — the sibling
-clones that live beside `Relay` in the workspace (`pull all`, `push all`, `status all`, …).
+clones that live beside `relay` in the workspace (`pull all`, `push all`, `status all`, …).
 
 ## The short version
 
@@ -20,7 +20,7 @@ Put it on your `PATH` once (symlink is enough if `~/.local/bin` is already there
 ln -sfn ~/OpenPhysics/relay/scripts/fleet ~/.local/bin/fleet
 ```
 
-Or call it as `Relay/scripts/fleet …` / `scripts/fleet …` from the Relay directory.
+Or call it as `relay/scripts/fleet …` / `scripts/fleet …` from the relay directory.
 
 These operate on your **local working trees**. Two related tools cover different jobs:
 
@@ -42,7 +42,7 @@ fleet --type app branch -vv           # apps only
 fleet --status active fetch --all     # only actively maintained repos
 ```
 
-> Without a filter the list includes `Relay` and `.github` too. Add `--type` if you want to
+> Without a filter the list includes `relay` and `.github` too. Add `--type` if you want to
 > skip them.
 
 ---
@@ -136,7 +136,7 @@ done
   loudly instead of silently merging. Resolve those repos by hand.
 - **Non-zero exit if any repo fails.** `fleet` keeps going after a failure, then exits `1` if
   any repo's git command failed — scan the output for which ones.
-- **Workspace location.** Scripts assume `Relay` sits beside the member repos. If your checkout
+- **Workspace location.** Scripts assume `relay` sits beside the member repos. If your checkout
   differs, set `FLEET_WORKSPACE` or pass `--catalog /path/to/repos.json`.
 - For non-git fan-out (lint, build, dependency bumps) that should land as PRs, use
   [`fleet-exec.sh`](../scripts/fleet-exec.sh) instead — it works on fresh clones, not your local

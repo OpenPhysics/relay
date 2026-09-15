@@ -9,7 +9,7 @@
 #
 # Direction is GitHub -> GitLab, driven from here. (GitLab's own "pull mirror"
 # would do this server-side but is a paid feature; pushing from our side works
-# on the free tier and keeps the schedule in Relay.) The same command does the
+# on the free tier and keeps the schedule in relay.) The same command does the
 # first import and every later sync: a bare mirror is cached per repo under
 # --work-dir, so subsequent runs fetch and push only new objects.
 #

@@ -45,7 +45,7 @@
   },
   "outOfScope": [
     "Branch protection rules (org/policy dependent)",
-    "Code scanning default setup — repos use Relay's shared-codeql.yml instead",
+    "Code scanning default setup — repos use relay's shared-codeql.yml instead",
     "Org-level code-security configurations",
     "Dependabot.yml file contents — see config/dependabot-*.yml + sync-dependabot.sh"
   ]

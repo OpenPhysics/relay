@@ -77,7 +77,7 @@ Filters:
 ## clone-fleet.sh
 
 Populate the workspace from the catalog: clone every selected repo as a sibling directory
-beside `Relay`. `repos.json` is the single source of truth — a repo appears here the moment
+beside `relay`. `repos.json` is the single source of truth — a repo appears here the moment
 it is added to the catalog. Re-runnable and safe: repos already on disk are skipped unless
 `--update` is given (which `git pull --ff-only`s them).
 
@@ -124,6 +124,9 @@ scripts/fleet-exec.sh --type library -- npm pkg set devDependencies.eslint=^9.0.
 # Apply a Biome autofix across all libraries and open one PR each:
 scripts/fleet-exec.sh --type library --apply --install \
   --branch chore/biome-fix --title "chore: biome autofix" -- npm run fix
+
+When a Dependabot (or manual) PR bumps `@biomejs/biome`, also update `biome.json`
+`$schema` to the same version — see [`doc/biome-bumps.md`](../doc/biome-bumps.md).
 ```
 
 Key options: `--apply` (push + open PRs), `--install` (`npm install` before the command,
@@ -156,7 +159,7 @@ Key options: `--group`/`--host` (default `OpenPhysics` on `https://gitlab.com`),
 (GitLab paths cannot start with a dot).
 
 Runs daily from [`gitlab-mirror.yml`](../.github/workflows/gitlab-mirror.yml) once a
-`GITLAB_TOKEN` secret exists on Relay. Setup, verification, and the restore procedure:
+`GITLAB_TOKEN` secret exists on relay. Setup, verification, and the restore procedure:
 [`../doc/gitlab-mirror.md`](../doc/gitlab-mirror.md).
 
 ## sync-github-metadata.sh
@@ -198,7 +201,7 @@ instead of inspecting a mature repo by hand.
 ## sync-repo-docs.sh
 
 Rewrites org-qualified references (CI badges, LICENSE/CONTRIBUTING links, `package.json`
-repository URLs, `uses:` calls into Relay, …) in member repos to match the catalog's
+repository URLs, `uses:` calls into relay, …) in member repos to match the catalog's
 `organization` / `pagesBase`. Useful after an org rename — a one-field catalog edit followed by
 one run of this script.
 
@@ -212,7 +215,7 @@ Writes files only — committing, pushing, and opening PRs is left to you or to 
 ## Self-check scripts
 
 Run by [`relay-selfcheck.yml`](../.github/workflows/relay-selfcheck.yml) on every PR or `main`
-push that touches `scripts/`, `structure/`, or Relay's own `.github/workflows`/`.github/actions`,
+push that touches `scripts/`, `structure/`, or relay's own `.github/workflows`/`.github/actions`,
 and runnable locally:
 
 ```bash
@@ -247,11 +250,11 @@ scripts/parse-repos.sh names --type library
 
 ## Workspace layout
 
-Scripts assume the orchestration `Relay` repo lives beside member repos:
+Scripts assume the orchestration `relay` repo lives beside member repos:
 
 ```
 OpenPhysics/
-  Relay/            ← this repo
+  relay/            ← this repo
   pyro/
   pycd48/
   jscd48-tmp/
