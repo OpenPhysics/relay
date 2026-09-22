@@ -2,13 +2,15 @@
 # Run a git command across every fleet repo checked out locally.
 #
 # Memorable shortcuts for the fleet-git one-liners in doc/fleet-git.md:
-#   fleet push
-#   fleet pull --ff-only
-#   fleet status -s
-#   fleet --type library log -1 --oneline
+#   opgit push
+#   opgit pull --ff-only
+#   opgit status -s
+#   opgit --type library log -1 --oneline
+#
+# Named opgit (OpenPhysics git) to avoid colliding with OpenLyceum's `fleet`.
 set -euo pipefail
 
-# Resolve symlinks so `~/.local/bin/fleet` still finds sibling scripts.
+# Resolve symlinks so `~/.local/bin/opgit` still finds sibling scripts.
 SOURCE="${BASH_SOURCE[0]}"
 while [[ -L "$SOURCE" ]]; do
   DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
@@ -19,7 +21,7 @@ SCRIPT_DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
 
 usage() {
   cat <<'EOF'
-Usage: fleet [filters] <git-args...>
+Usage: opgit [filters] <git-args...>
 
 Run a git command in every catalog repo that exists locally beside relay.
 
@@ -30,12 +32,12 @@ Filters (same as parse-repos.sh):
   -h, --help          Show this help
 
 Examples:
-  fleet push
-  fleet pull --ff-only
-  fleet status -s
-  fleet fetch --all --prune
-  fleet --type library log -1 --oneline
-  fleet --type tool branch -vv
+  opgit push
+  opgit pull --ff-only
+  opgit status -s
+  opgit fetch --all --prune
+  opgit --type library log -1 --oneline
+  opgit --type tool branch -vv
 
 See also: doc/fleet-git.md, scripts/clone-fleet.sh, scripts/fleet-exec.sh
 EOF
@@ -65,8 +67,8 @@ while [[ $# -gt 0 ]]; do
       break
       ;;
     -*)
-      # Unknown dashed arg: treat as the start of git args (e.g. fleet -C is wrong;
-      # fleet status -s is handled once we leave the filter loop).
+      # Unknown dashed arg: treat as the start of git args (e.g. opgit -C is wrong;
+      # opgit status -s is handled once we leave the filter loop).
       GIT_ARGS+=("$@")
       break
       ;;

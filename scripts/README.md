@@ -21,7 +21,7 @@ the workspace checkout.
 | [`check-repos-catalog.sh`](check-repos-catalog.sh) | Validate `repos.json` against `structure/repos.schema.json` + fleet invariants |
 | [`check-uncataloged.sh`](check-uncataloged.sh) | Detect org repos on GitHub that are missing from `repos.json` (catches un-onboarded repos) |
 | [`clone-fleet.sh`](clone-fleet.sh) | Clone/update every catalog repo into the workspace as a sibling |
-| [`fleet`](fleet) | Run a git command across every local checkout (`fleet push`, `fleet status -s`, …) |
+| [`opgit`](opgit) | Run a git command across every local checkout (`opgit push`, `opgit status -s`, …) |
 | [`fleet-exec.sh`](fleet-exec.sh) | Run a command across many repos and open one PR each |
 | [`../doc/fleet-git.md`](../doc/fleet-git.md) | Cheat sheet: everyday git across local checkouts (`pull`/`push`/`status` all) |
 | [`sync-gitlab-mirror.sh`](sync-gitlab-mirror.sh) | Mirror every catalog repo's git history to a GitLab group (off-GitHub backup) |
@@ -95,18 +95,19 @@ scripts/clone-fleet.sh --dry-run --https
 Reuses the same catalog filters as `parse-repos.sh` (`--type`, `--status`, `--only NAME`,
 `--skip NAME`). Clones over SSH by default; `--https` for token/anonymous use.
 
-## fleet
+## opgit
 
-Run any git command across every catalog repo already checked out locally:
+Run any git command across every catalog repo already checked out locally
+(named `opgit` to avoid colliding with OpenLyceum's `fleet`):
 
 ```bash
 # put on PATH once (if ~/.local/bin is already there)
-ln -sfn ~/OpenPhysics/relay/scripts/fleet ~/.local/bin/fleet
+ln -sfn ~/OpenPhysics/relay/scripts/opgit ~/.local/bin/opgit
 
-fleet push
-fleet pull --ff-only
-fleet status -s
-fleet --type library log -1 --oneline
+opgit push
+opgit pull --ff-only
+opgit status -s
+opgit --type library log -1 --oneline
 ```
 
 Same catalog filters as `parse-repos.sh`. Full cheat sheet: [`doc/fleet-git.md`](../doc/fleet-git.md).

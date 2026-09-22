@@ -5,22 +5,23 @@ clones that live beside `relay` in the workspace (`pull all`, `push all`, `statu
 
 ## The short version
 
-[`scripts/fleet`](../scripts/fleet) runs any git command across every local catalog checkout:
+[`scripts/opgit`](../scripts/opgit) runs any git command across every local catalog checkout
+(named `opgit` — OpenPhysics git — to avoid colliding with OpenLyceum's `fleet`):
 
 ```bash
-fleet push
-fleet pull --ff-only
-fleet status -s
-fleet --type library log -1 --oneline
+opgit push
+opgit pull --ff-only
+opgit status -s
+opgit --type library log -1 --oneline
 ```
 
 Put it on your `PATH` once (symlink is enough if `~/.local/bin` is already there):
 
 ```bash
-ln -sfn ~/OpenPhysics/relay/scripts/fleet ~/.local/bin/fleet
+ln -sfn ~/OpenPhysics/relay/scripts/opgit ~/.local/bin/opgit
 ```
 
-Or call it as `relay/scripts/fleet …` / `scripts/fleet …` from the relay directory.
+Or call it as `relay/scripts/opgit …` / `scripts/opgit …` from the relay directory.
 
 These operate on your **local working trees**. Two related tools cover different jobs:
 
@@ -28,7 +29,7 @@ These operate on your **local working trees**. Two related tools cover different
 |---|---|
 | Update / clone every catalog repo into the workspace | [`scripts/clone-fleet.sh --update`](../scripts/clone-fleet.sh) |
 | Make the *same change* everywhere and open one PR per repo | [`scripts/fleet-exec.sh`](../scripts/fleet-exec.sh) (see [`fleet-auth.md`](fleet-auth.md)) |
-| Run an ad-hoc git command across your local checkouts | [`scripts/fleet`](../scripts/fleet) (below) |
+| Run an ad-hoc git command across your local checkouts | [`scripts/opgit`](../scripts/opgit) (below) |
 
 ---
 
@@ -37,9 +38,9 @@ These operate on your **local working trees**. Two related tools cover different
 Same catalog filters as the rest of the tooling:
 
 ```bash
-fleet --type library status -s        # libraries only
-fleet --type app branch -vv           # apps only
-fleet --status active fetch --all     # only actively maintained repos
+opgit --type library status -s        # libraries only
+opgit --type app branch -vv           # apps only
+opgit --status active fetch --all     # only actively maintained repos
 ```
 
 > Without a filter the list includes `relay` and `.github` too. Add `--type` if you want to
@@ -52,7 +53,7 @@ fleet --status active fetch --all     # only actively maintained repos
 **Status of all repos:**
 
 ```bash
-fleet status -s
+opgit status -s
 ```
 
 **Branch + dirty-count overview** — quick "where is everything" snapshot (custom format,
@@ -76,38 +77,38 @@ scripts/clone-fleet.sh --update
 Or, to pull only what's already on disk (no new clones):
 
 ```bash
-fleet pull --ff-only
+opgit pull --ff-only
 ```
 
 **Fetch all** (update remotes without touching working trees):
 
 ```bash
-fleet fetch --all --prune
+opgit fetch --all --prune
 ```
 
 **Push all** — pushes the current branch of each repo. Pushing writes to remotes, so review with
-`fleet status -s` first. `git push` is a no-op for repos with nothing to push:
+`opgit status -s` first. `git push` is a no-op for repos with nothing to push:
 
 ```bash
-fleet push
+opgit push
 ```
 
 For a brand-new local branch, set the upstream the first time:
 
 ```bash
-fleet push -u origin HEAD
+opgit push -u origin HEAD
 ```
 
 **Create the same branch everywhere:**
 
 ```bash
-fleet checkout -b chore/my-change
+opgit checkout -b chore/my-change
 ```
 
 **Last commit per repo:**
 
 ```bash
-fleet log -1 --oneline
+opgit log -1 --oneline
 ```
 
 ---
@@ -115,7 +116,7 @@ fleet log -1 --oneline
 ## The building block
 
 [`parse-repos.sh paths --require-local`](../scripts/parse-repos.sh) prints the on-disk path of
-every catalog repo that actually exists in your workspace. `scripts/fleet` is a thin wrapper
+every catalog repo that actually exists in your workspace. `scripts/opgit` is a thin wrapper
 around that; use the loop directly when you need something that isn't a plain `git` invocation:
 
 ```bash
@@ -134,7 +135,7 @@ done
   `push`, and `checkout` change state; eyeball a status overview before a bulk `push`.
 - **`pull --ff-only`** refuses to create merge commits, so a repo with diverged local work fails
   loudly instead of silently merging. Resolve those repos by hand.
-- **Non-zero exit if any repo fails.** `fleet` keeps going after a failure, then exits `1` if
+- **Non-zero exit if any repo fails.** `opgit` keeps going after a failure, then exits `1` if
   any repo's git command failed — scan the output for which ones.
 - **Workspace location.** Scripts assume `relay` sits beside the member repos. If your checkout
   differs, set `FLEET_WORKSPACE` or pass `--catalog /path/to/repos.json`.
