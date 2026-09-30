@@ -6,6 +6,16 @@
   "pagesBase": null,
   "repos": [
     {
+      "name": ".github",
+      "displayName": ".github",
+      "type": "config",
+      "language": ["Markdown"],
+      "description": "Community health files and public profile for the OpenPhysics organization.",
+      "deployedUrl": null,
+      "githubTopics": ["community-health", "organization-profile"],
+      "status": "active"
+    },
+    {
       "name": "relay",
       "displayName": "relay",
       "type": "tool",
@@ -77,6 +87,25 @@
       "description": "Capture waveforms from a Tektronix TBS1072B-EDU oscilloscope in the browser over WebUSB/USBTMC.",
       "deployedUrl": "https://openphysics.github.io/tektronixOscilloscope",
       "githubTopics": ["webusb", "oscilloscope", "physics", "hardware"],
+      "status": "active"
+    },
+    {
+      "name": "pascoTS",
+      "displayName": "pascoTS",
+      "type": "library",
+      "language": ["TypeScript"],
+      "description": "TypeScript/JavaScript library for connecting to PASCO Wireless sensors in web browsers using Web Bluetooth.",
+      "githubTopics": ["web-bluetooth", "pasco", "sensors", "physics", "hardware"],
+      "status": "active"
+    },
+    {
+      "name": "pasco-BLE-examples",
+      "displayName": "PASCO BLE Examples",
+      "type": "app",
+      "language": ["HTML", "JavaScript"],
+      "description": "Examples of HTML pages connecting to PASCO Wireless sensors using Web Bluetooth.",
+      "deployedUrl": "https://openphysics.github.io/pasco-BLE-examples/examples/",
+      "githubTopics": ["web-bluetooth", "pasco", "sensors", "data-collection", "physics"],
       "status": "active"
     }
   ]
