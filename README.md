@@ -4,10 +4,10 @@ Orchestration repository for the [OpenPhysics](https://github.com/OpenPhysics) o
 the **operational** side of the org: the reusable CI/CD workflows member repos call, the cross-repo
 automation scripts, the Dependabot templates, and the machine-readable repository catalog.
 
-> Community-health defaults (license, contributing, code of conduct, security policy, issue/PR templates,
-> org profile) belong in an `OpenPhysics/.github` repo — GitHub requires those in the special `.github`
-> repo so they are inherited org-wide. That repo doesn't exist yet; until it does, member repos keep
-> their own `LICENSE` / `CONTRIBUTING.md`.
+> The [`OpenPhysics/.github`](https://github.com/OpenPhysics/.github) repo holds the org profile
+> (`profile/README.md`). Other community-health defaults (license, contributing, code of conduct,
+> security policy, issue/PR templates) are not centralized there yet, so member repos keep their own
+> `LICENSE` / `CONTRIBUTING.md`; relay's [`SECURITY.md`](SECURITY.md) covers the org's reporting policy.
 
 ## Contents
 
@@ -24,7 +24,8 @@ automation scripts, the Dependabot templates, and the machine-readable repositor
 | [`.github/workflows/gitlab-mirror.yml`](.github/workflows/gitlab-mirror.yml) | Daily push of every repo's git history to the GitLab backup group |
 | [`.github/workflows/sync-dependabot.yml`](.github/workflows/sync-dependabot.yml) | Validate the Dependabot templates |
 | [`.github/workflows/relay-selfcheck.yml`](.github/workflows/relay-selfcheck.yml) | Validate relay's own invariants (catalog schema, Node-version sync, script syntax) |
-| [`scripts/`](scripts/) | Repo catalog tools, compliance checks, Dependabot/metadata sync ([`scripts/README.md`](scripts/README.md)) |
+| [`scripts/`](scripts/) | Repo catalog tools (`parse-repos.sh`, `clone-fleet.sh`, `check-uncataloged.sh`), `opgit`, compliance checks, Dependabot/metadata/docs sync ([`scripts/README.md`](scripts/README.md)) |
+| [`tests/`](tests/) | bats tests for the compliance and fleet-health scripts (`npm test`) |
 | [`config/`](config/) | Canonical Dependabot and GitHub-repo-settings baselines |
 | [`structure/repos.json`](structure/repos.json) | Machine-readable catalog of org repositories |
 | [`structure/repos.schema.json`](structure/repos.schema.json) | JSON Schema for the catalog |

@@ -99,7 +99,7 @@ Reuses the same catalog filters as `parse-repos.sh` (`--type`, `--status`, `--on
 ## opgit
 
 Run any git command across every catalog repo already checked out locally
-(named `opgit` to avoid colliding with OpenLyceum's `fleet`):
+(named `opgit`):
 
 ```bash
 # put on PATH once (if ~/.local/bin is already there)
@@ -126,10 +126,10 @@ scripts/fleet-exec.sh --type library -- npm pkg set devDependencies.eslint=^9.0.
 # Apply a Biome autofix across all libraries and open one PR each:
 scripts/fleet-exec.sh --type library --apply --install \
   --branch chore/biome-fix --title "chore: biome autofix" -- npm run fix
+```
 
 When a Dependabot (or manual) PR bumps `@biomejs/biome`, also update `biome.json`
 `$schema` to the same version — see [`doc/biome-bumps.md`](../doc/biome-bumps.md).
-```
 
 Key options: `--apply` (push + open PRs), `--install` (`npm install` before the command,
 needed for lint/build codemods), `--branch`, `--title`, `--label`, `--skip NAME`, `--keep`.
@@ -257,6 +257,7 @@ Scripts assume the orchestration `relay` repo lives beside member repos:
 ```
 OpenPhysics/
   relay/            ← this repo
+  .github/
   pyro/
   pycd48/
   jscd48-tmp/

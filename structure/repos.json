@@ -49,7 +49,7 @@
       "language": ["JavaScript"],
       "description": "JavaScript library for controlling the CD48 Coincidence Counter via the Web Serial API. Published to npm.",
       "githubTopics": ["physics", "hardware", "web-serial", "coincidence-counter"],
-      "status": "active"
+      "status": "archived"
     },
     {
       "name": "tscd48-tmp",

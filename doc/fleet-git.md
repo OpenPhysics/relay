@@ -6,7 +6,7 @@ clones that live beside `relay` in the workspace (`pull all`, `push all`, `statu
 ## The short version
 
 [`scripts/opgit`](../scripts/opgit) runs any git command across every local catalog checkout
-(named `opgit` — OpenPhysics git — to avoid colliding with OpenLyceum's `fleet`):
+(named `opgit`, for OpenPhysics git):
 
 ```bash
 opgit push
