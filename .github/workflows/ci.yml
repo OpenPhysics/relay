@@ -48,11 +48,29 @@ jobs:
         # checkout, not this repo. Renaming the org means editing this line.
         uses: OpenPhysics/relay/.github/actions/security-audit@main
 
+      # Same script names as scripts/fleet-health-repo.sh. lint / check / test
+      # are skipped when absent; build always runs. "typecheck" is accepted
+      # until a repo exposes the canonical "check" name.
       - name: Lint
-        run: npm run lint
+        run: |
+          set -euo pipefail
+          if jq -e '.scripts.lint // empty' package.json >/dev/null 2>&1; then
+            npm run lint
+          else
+            echo "No \"lint\" script defined; skipping."
+          fi
 
       - name: Type check
-        run: npm run check
+        run: |
+          set -euo pipefail
+          if jq -e '.scripts.check // empty' package.json >/dev/null 2>&1; then
+            npm run check
+          elif jq -e '.scripts.typecheck // empty' package.json >/dev/null 2>&1; then
+            echo "No \"check\" script; running \"typecheck\"."
+            npm run typecheck
+          else
+            echo "No \"check\" or \"typecheck\" script defined; skipping."
+          fi
 
       # Auto-run when the caller defines a "test" npm script; force on/off via
       # run-tests "true"/"false". Callers without a test script stay green

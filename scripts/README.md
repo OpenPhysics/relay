@@ -34,6 +34,7 @@ the workspace checkout.
 | [`sync-repo-docs.sh`](sync-repo-docs.sh) | Rewrite org-qualified prose/workflow references (CI badges, LICENSE links, `uses:` calls, …) across member repos |
 | [`check-repo-compliance.sh`](check-repo-compliance.sh) | README/license/CI/Dependabot/Node-pin compliance for one repo |
 | [`check-node-version.sh`](check-node-version.sh) | Assert fleet Node major agrees across workflows; with sibling checkouts, also engines.node |
+| [`fleet-health-repo.sh`](fleet-health-repo.sh) | Probe one npm checkout (`lint`, `check`/`typecheck`, `build`, `test`) and print a health-table row |
 | [`sync-dependabot.sh`](sync-dependabot.sh) | Copy Dependabot configs from `config/` to catalog npm/pip repos (by `language`) |
 
 ## parse-repos.sh

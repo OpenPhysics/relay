@@ -1,9 +1,10 @@
 name: Fleet Health
 
-# Org-wide health check: clone every active npm repo and run the standard
-# pre-PR trio (lint, type-check, build), then publish a pass/fail table to the
-# job summary. Catches a repo that a shared-workflow or dependency change
-# quietly broke. Read-only — uses the default token to clone public repos.
+# Org-wide health check: clone every active npm repo and run the same scripts
+# as ci.yml (lint, check / typecheck, build, test), then publish a pass/fail
+# table to the job summary. A missing script is a skip, not a failure. Catches
+# a repo that a shared-workflow or dependency change quietly broke. Read-only —
+# uses the default token to clone public repos.
 #
 # npm-only: it runs `npm ci`/`npm run <script>`, so only repos whose language
 # includes JavaScript or TypeScript are in scope (Python repos like pycd48
@@ -70,6 +71,8 @@ jobs:
       matrix:
         sim: ${{ fromJson(needs.discover.outputs.matrix) }}
     steps:
+      - uses: actions/checkout@v7.0.1
+
       - uses: actions/setup-node@v7.0.0
         with:
           # Mirrors the fleet Node default — bump all setup-node workflows together.
@@ -95,49 +98,14 @@ jobs:
           SIM: ${{ matrix.sim }}
         run: |
           set -uo pipefail
-
-          icon() { case "$1" in 0) printf '✅' ;; 1) printf '❌' ;; 2) printf '—' ;; esac; }
-
-          # Run an npm script if the repo defines it: 0 pass, 1 fail, 2 absent.
-          run_script() {
-            local dir="$1" name="$2"
-            if ! jq -e --arg s "$name" '.scripts[$s] // empty' "$dir/package.json" >/dev/null 2>&1; then
-              return 2
-            fi
-            ( cd "$dir" && npm run "$name" >/dev/null 2>&1 ) && return 0 || return 1
-          }
-
           dir="$(mktemp -d)"
-          row=""
-          status=0
-
+          trap 'rm -rf "$dir"' EXIT
           if ! gh repo clone "${{ github.repository_owner }}/$SIM" "$dir" -- --depth 1 --quiet; then
-            row="| $SIM | ❌ clone | — | — | — | — |"
-            status=1
-          else
-            # Reproducible install when a lockfile is present; fall back otherwise.
-            if [ -f "$dir/package-lock.json" ]; then
-              ( cd "$dir" && npm ci --no-audit --no-fund >/dev/null 2>&1 ) && inst=0 || inst=1
-            else
-              ( cd "$dir" && npm install --no-audit --no-fund >/dev/null 2>&1 ) && inst=0 || inst=1
-            fi
-
-            if [ "$inst" -ne 0 ]; then
-              row="| $SIM | $(icon 1) | — | — | — | — |"
-              status=1
-            else
-              run_script "$dir" lint;  case $? in 0) lint=0 ;; 2) lint=2 ;; *) lint=1; status=1 ;; esac
-              run_script "$dir" check; case $? in 0) chk=0 ;; 2) chk=2 ;; *) chk=1; status=1 ;; esac
-              run_script "$dir" build; case $? in 0) bld=0 ;; 2) bld=2 ;; *) bld=1; status=1 ;; esac
-              run_script "$dir" test;  case $? in 0) tst=0 ;; 2) tst=2 ;; *) tst=1; status=1 ;; esac
-              row="| $SIM | $(icon "$inst") | $(icon "$lint") | $(icon "$chk") | $(icon "$bld") | $(icon "$tst") |"
-            fi
+            echo "| $SIM | ❌ clone | — | — | — | — |" | tee "row-$SIM.md"
+            exit 1
           fi
-
-          rm -rf "$dir"
-          echo "$row" > "row-$SIM.md"
-          echo "$row"
-          exit "$status"
+          # pipefail so a failing probe still fails this step after tee writes the row.
+          scripts/fleet-health-repo.sh --name "$SIM" "$dir" | tee "row-$SIM.md"
 
       - name: Upload row
         if: always()
@@ -170,8 +138,16 @@ jobs:
             find rows -name '*.md' -exec cat {} + 2>/dev/null | sort || true
           } >> "$GITHUB_STEP_SUMMARY"
 
-          # Fail the run if any sim reported a failure.
+          # Fail when a health job failed, including a crash that never wrote a row.
+          if [ "${{ needs.discover.result }}" != "success" ]; then
+            echo "Could not build the repo list." >&2
+            exit 1
+          fi
+          if [ "${{ needs.health.result }}" != "success" ] && [ "${{ needs.health.result }}" != "skipped" ]; then
+            echo "One or more repos failed — see the table above." >&2
+            exit 1
+          fi
           if find rows -name '*.md' -exec cat {} + 2>/dev/null | grep -q '❌'; then
-            echo "One or more simulations failed — see the table above." >&2
+            echo "One or more repos failed — see the table above." >&2
             exit 1
           fi

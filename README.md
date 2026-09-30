@@ -60,10 +60,12 @@ Optional compliance checking:
       repo-name: ${{ github.event.repository.name }}
 ```
 
-`ci.yml` runs the test step automatically when the caller defines a `test` npm script — no per-repo
-flag needed. Pass `run-tests: "true"` to force it on (e.g. before a test script exists) or
-`run-tests: "false"` to opt out. `ci.yml` is npm-specific; a Python repo (e.g. `pycd48`) runs its
-own CI, wiring in `shared-dependency-review.yml` / `shared-codeql.yml` directly if useful.
+`ci.yml` runs these npm scripts when the caller defines them: `lint`, `check` (type-check; a
+`typecheck` script is accepted until the repo adds `check`), `test`, and `build`. A missing
+`lint`, `check` / `typecheck`, or `test` script is skipped. `build` always runs. Pass
+`run-tests: "true"` to force tests on (e.g. before a test script exists) or `run-tests: "false"`
+to opt out. `ci.yml` is npm-specific; a Python repo (e.g. `pycd48`) runs its own CI, wiring in
+`shared-dependency-review.yml` / `shared-codeql.yml` directly if useful.
 
 Pages deploy, for repos that publish to GitHub Pages. Callers use `push` to `main` **and**
 `workflow_dispatch`, so a site can be published without waiting for a push:
@@ -146,8 +148,9 @@ Cross-repo automation, all driven from the catalog:
   relay only. Setup steps (fine-grained PAT or GitHub App): [`doc/fleet-auth.md`](doc/fleet-auth.md).
 - **Health report** — [`fleet-health.yml`](.github/workflows/fleet-health.yml) runs weekly,
   fanning out one matrix job per active npm repo (download cache reused across runs) to run
-  lint, type-check, build, and test, then publishing a pass/fail table to the job summary.
-  Read-only; surfaces a repo broken by a shared-workflow or dependency change.
+  the same scripts as `ci.yml` (`lint`, `check` or `typecheck`, `build`, `test`), then
+  publishing a pass/fail table to the job summary. A missing script is a skip. Read-only;
+  surfaces a repo broken by a shared-workflow or dependency change.
 - **Compliance audit** — [`shared-compliance-check.yml`](.github/workflows/shared-compliance-check.yml)
   audits README/CI/Dependabot wiring across the org, fanning out one matrix job per repo and
   aggregating a single pass/fail table (see above).

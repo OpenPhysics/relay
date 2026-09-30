@@ -20,7 +20,10 @@ requires editing a script.
 
 3. **Wire shared CI.** In the repo's `.github/workflows/ci.yml`, call relay's
    reusable workflows (see the [README](../README.md#shared-ci) for the exact
-   snippet). Add `.github/dependabot.yml` from
+   snippet). For an npm repo, use the script names `lint`, `check` (type-check),
+   `build`, and optionally `test`. `ci.yml` skips `lint`, `check`, and `test`
+   when that script is absent, and always runs `build`. Add
+   `.github/dependabot.yml` from
    [`config/dependabot-npm.yml`](../config/dependabot-npm.yml) or
    [`config/dependabot-pip.yml`](../config/dependabot-pip.yml) — or run:
 
