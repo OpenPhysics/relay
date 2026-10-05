@@ -77,9 +77,11 @@ jobs:
       # without per-repo config.
       - name: Test
         if: inputs.run-tests != 'false'
+        env:
+          RUN_TESTS: ${{ inputs.run-tests }}
         run: |
           set -euo pipefail
-          if [ "${{ inputs.run-tests }}" = "true" ]; then
+          if [ "$RUN_TESTS" = "true" ]; then
             npm test
           elif jq -e '.scripts.test // empty' package.json >/dev/null 2>&1; then
             npm test

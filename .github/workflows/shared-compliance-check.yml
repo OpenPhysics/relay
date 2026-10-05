@@ -123,6 +123,8 @@ jobs:
           merge-multiple: true
 
       - name: Assemble report
+        env:
+          MATRIX: ${{ needs.discover-all.outputs.matrix }}
         run: |
           set -euo pipefail
           {
@@ -133,7 +135,28 @@ jobs:
             find rows -name '*.md' -exec cat {} + 2>/dev/null | sort || true
           } >> "$GITHUB_STEP_SUMMARY"
 
+          # Fail when discover or audit failed, including a crash that never wrote a row.
+          if [ "${{ needs.discover-all.result }}" != "success" ]; then
+            echo "Could not build the repo list." >&2
+            exit 1
+          fi
+          if [ "${{ needs.audit.result }}" != "success" ] && [ "${{ needs.audit.result }}" != "skipped" ]; then
+            echo "One or more simulations failed compliance — see the table above." >&2
+            exit 1
+          fi
           if find rows -name '*.md' -exec cat {} + 2>/dev/null | grep -q '❌'; then
             echo "One or more simulations failed compliance — see the table above." >&2
+            exit 1
+          fi
+
+          missing=0
+          while IFS= read -r name; do
+            [ -n "$name" ] || continue
+            if ! find rows -name '*.md' -exec cat {} + 2>/dev/null | grep -F "| ${name} |" >/dev/null; then
+              echo "Missing compliance row for ${name}" >&2
+              missing=1
+            fi
+          done < <(printf '%s' "$MATRIX" | jq -r '.[]')
+          if [ "$missing" -ne 0 ]; then
             exit 1
           fi

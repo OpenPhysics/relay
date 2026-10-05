@@ -108,7 +108,35 @@ for tool in gh jq git; do
   command -v "$tool" >/dev/null 2>&1 || { echo "$tool is required" >&2; exit 1; }
 done
 
-if [[ ( $APPLY -eq 1 || $CHECK_AUTH -eq 1 ) ]] && ! gh auth status >/dev/null 2>&1; then
+# Fleet credentials are applied only to gh and git, the same way
+# sync-gitlab-mirror.sh passes an Authorization header to git and keeps the
+# token out of every other process. The user command must not see them.
+FLEET_TOKEN="${FLEET_TOKEN:-${GH_TOKEN:-${GITHUB_TOKEN:-}}}"
+unset GH_TOKEN GITHUB_TOKEN GH_ENTERPRISE_TOKEN
+
+gh_cmd() {
+  if [[ -n "$FLEET_TOKEN" ]]; then
+    GH_TOKEN="$FLEET_TOKEN" command gh "$@"
+  else
+    command gh "$@"
+  fi
+}
+
+git_authed() {
+  if [[ -n "$FLEET_TOKEN" ]]; then
+    local basic
+    basic="$(printf '%s' "x-access-token:${FLEET_TOKEN}" | base64 | tr -d '\n')"
+    GIT_TERMINAL_PROMPT=0 \
+      GIT_CONFIG_COUNT=1 \
+      GIT_CONFIG_KEY_0="http.https://github.com/.extraheader" \
+      GIT_CONFIG_VALUE_0="Authorization: Basic ${basic}" \
+      git "$@"
+  else
+    GIT_TERMINAL_PROMPT=0 git "$@"
+  fi
+}
+
+if [[ ( $APPLY -eq 1 || $CHECK_AUTH -eq 1 ) ]] && ! gh_cmd auth status >/dev/null 2>&1; then
   echo "This run requires an authenticated gh (set GH_TOKEN or run 'gh auth login')" >&2
   exit 1
 fi
@@ -118,12 +146,12 @@ fi
 # written, so an apply=true run won't start with a stale/under-scoped token.
 if [[ $CHECK_AUTH -eq 1 ]]; then
   auth_total=0 auth_ok=0 auth_fail=0
-  who="$(gh api user --jq .login 2>/dev/null || echo '?')"
+  who="$(gh_cmd api user --jq .login 2>/dev/null || echo '?')"
   echo "Auth preflight as: $who"
   printf '%-28s %s\n' "REPO" "PUSH"
   for repo in $(repos_names); do
     auth_total=$((auth_total + 1))
-    if push="$(gh api "repos/$ORG/$repo" --jq .permissions.push 2>/dev/null)" && [[ "$push" == "true" ]]; then
+    if push="$(gh_cmd api "repos/$ORG/$repo" --jq .permissions.push 2>/dev/null)" && [[ "$push" == "true" ]]; then
       printf '%-28s %s\n' "$repo" "✅ yes"
       auth_ok=$((auth_ok + 1))
     else
@@ -147,6 +175,18 @@ is_skipped() {
 total=0 changed=0 opened=0 overall=0
 NAMES="$(repos_names)"
 
+workdir=""
+cleanup_workdir() {
+  if [[ "${KEEP:-0}" -eq 1 ]]; then
+    return 0
+  fi
+  if [[ -n "${workdir}" ]]; then
+    rm -rf "$workdir"
+    workdir=""
+  fi
+}
+trap cleanup_workdir EXIT
+
 for repo in $NAMES; do
   if is_skipped "$repo"; then
     echo "==== $repo (skipped) ===="
@@ -156,10 +196,9 @@ for repo in $NAMES; do
   echo "==== $repo ===="
 
   workdir="$(mktemp -d)"
-  cleanup() { [[ $KEEP -eq 1 ]] || rm -rf "$workdir"; }
 
-  if ! gh repo clone "$ORG/$repo" "$workdir" -- --depth 1 --quiet 2>/dev/null; then
-    echo "  clone failed"; overall=1; cleanup; continue
+  if ! gh_cmd repo clone "$ORG/$repo" "$workdir" -- --depth 1 --quiet 2>/dev/null; then
+    echo "  clone failed"; overall=1; cleanup_workdir; continue
   fi
 
   base="$(git -C "$workdir" branch --show-current)"
@@ -167,18 +206,23 @@ for repo in $NAMES; do
 
   if [[ $INSTALL -eq 1 && -f "$workdir/package.json" ]]; then
     if ! ( cd "$workdir" && npm install --no-audit --no-fund >/dev/null 2>&1 ); then
-      echo "  npm install failed"; overall=1; cleanup; continue
+      echo "  npm install failed"; overall=1; cleanup_workdir; continue
     fi
   fi
 
-  if ! ( cd "$workdir" && REPO_NAME="$repo" "${CMD[@]}" ); then
-    echo "  command failed"; overall=1; cleanup; continue
+  # Strip tokens again in the child so a login shell cannot inherit a PAT.
+  if ! (
+    cd "$workdir" || exit 1
+    unset GH_TOKEN GITHUB_TOKEN GH_ENTERPRISE_TOKEN FLEET_TOKEN
+    REPO_NAME="$repo" "${CMD[@]}"
+  ); then
+    echo "  command failed"; overall=1; cleanup_workdir; continue
   fi
 
   # Ignore an npm-install-created node_modules / lockfile churn unless the command
   # touched the lockfile itself; node_modules is gitignored in every sim already.
   if [[ -z "$(git -C "$workdir" status --porcelain)" ]]; then
-    echo "  no changes"; cleanup; continue
+    echo "  no changes"; cleanup_workdir; continue
   fi
 
   changed=$((changed + 1))
@@ -186,24 +230,26 @@ for repo in $NAMES; do
 
   if [[ $APPLY -eq 0 ]]; then
     echo "  [dry-run] would commit, push '$BRANCH', and open a PR into '$base'"
-    cleanup; continue
+    cleanup_workdir; continue
   fi
 
   git -C "$workdir" add -A
-  git -C "$workdir" -c "user.name=$GIT_NAME" -c "user.email=$GIT_EMAIL" commit -q -m "$COMMIT_MSG"
-  if ! git -C "$workdir" push -q -u origin "$BRANCH" 2>/dev/null; then
-    echo "  push failed"; overall=1; cleanup; continue
+  if ! git -C "$workdir" -c "user.name=$GIT_NAME" -c "user.email=$GIT_EMAIL" commit -q -m "$COMMIT_MSG"; then
+    echo "  commit failed"; overall=1; cleanup_workdir; continue
+  fi
+  if ! git_authed -C "$workdir" push -q -u origin "$BRANCH" 2>/dev/null; then
+    echo "  push failed"; overall=1; cleanup_workdir; continue
   fi
 
   label_args=()
   for l in ${LABELS[@]+"${LABELS[@]}"}; do label_args+=(--label "$l"); done
-  if pr_url="$( cd "$workdir" && gh pr create --base "$base" --head "$BRANCH" \
+  if pr_url="$( cd "$workdir" && gh_cmd pr create --base "$base" --head "$BRANCH" \
       --title "$TITLE" --body "$BODY" ${label_args[@]+"${label_args[@]}"} 2>&1 )"; then
     echo "  opened: $pr_url"; opened=$((opened + 1))
   else
     echo "  PR creation failed: $pr_url"; overall=1
   fi
-  cleanup
+  cleanup_workdir
 done
 
 echo "----"

@@ -53,30 +53,10 @@ repos_reset_filters() {
   REQUIRE_LOCAL=0
 }
 
+# Filters are jq variables ($name, $type, $status), never interpolated text.
+# An empty string means "no filter". Callers must pass them with --arg.
 repos_jq_select_expr() {
-  local parts=()
-
-  if [[ -n "$FILTER_NAME" ]]; then
-    parts+=(".name == \"$FILTER_NAME\"")
-  fi
-  if [[ -n "$FILTER_TYPE" ]]; then
-    parts+=(".type == \"$FILTER_TYPE\"")
-  fi
-  if [[ -n "$FILTER_STATUS" ]]; then
-    parts+=(".status == \"$FILTER_STATUS\"")
-  fi
-
-  if [[ ${#parts[@]} -eq 0 ]]; then
-    printf '.'
-    return
-  fi
-
-  local expr="${parts[0]}"
-  local part
-  for part in "${parts[@]:1}"; do
-    expr="$expr and $part"
-  done
-  printf 'select(%s)' "$expr"
+  printf '%s\n' 'select(($name == "" or .name == $name) and ($type == "" or .type == $type) and ($status == "" or .status == $status))'
 }
 
 # Pages/homepage URL for a catalog row:
@@ -111,7 +91,12 @@ JQ
 
 repos_filtered_json_lines() {
   repos_require_jq
-  jq -c --arg workspace "$(repos_workspace_root)" "$(repos_jq_enrich_program)" "$(repos_catalog_path)"
+  jq -c \
+    --arg workspace "$(repos_workspace_root)" \
+    --arg name "$FILTER_NAME" \
+    --arg type "$FILTER_TYPE" \
+    --arg status "$FILTER_STATUS" \
+    "$(repos_jq_enrich_program)" "$(repos_catalog_path)"
 }
 
 repos_add_local_exists() {
