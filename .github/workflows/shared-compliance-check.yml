@@ -104,7 +104,7 @@ jobs:
 
       - name: Upload row
         if: always()
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: compliance-row-${{ matrix.sim }}
           path: row-${{ matrix.sim }}.md
@@ -116,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download rows
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@v8.0.2
         with:
           pattern: compliance-row-*
           path: rows
