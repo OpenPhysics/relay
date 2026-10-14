@@ -104,7 +104,7 @@ jobs:
 
       - name: Upload row
         if: always()
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: compliance-row-${{ matrix.sim }}
           path: row-${{ matrix.sim }}.md
