@@ -4,6 +4,16 @@
   "private": true,
   "type": "module",
   "description": "Tooling for the OpenPhysics org orchestration repo (relay): repo metadata helpers and the shared compliance/catalog scripts.",
+  "engines": {
+    "node": ">=26"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=26",
+      "onFail": "error"
+    }
+  },
   "scripts": {
     "test": "bats tests/*.bats"
   },

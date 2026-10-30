@@ -89,20 +89,58 @@ setup() {
 
 # ── Node pins ─────────────────────────────────────────────────────────────────
 
-@test "missing engines.node warns" {
+@test "missing engines.node fails" {
   local major
   major="$(fleet_node_major)"
   echo '{"name": "fixture-lib"}' >"$REPO/package.json"
   run_compliance "$REPO"
-  assert_success
+  assert_failure
   assert_output --partial "engines.node is missing (expected >=${major})"
 }
 
-@test "engines.node below the fleet major warns" {
-  sed -i 's/">=[0-9]*"/">=18"/' "$REPO/package.json"
+@test "engines.node below the fleet major fails" {
+  local major
+  major="$(fleet_node_major)"
+  python3 - "$REPO/package.json" "$major" <<'PY'
+import json, sys
+path, major = sys.argv[1], sys.argv[2]
+pkg = json.load(open(path))
+pkg["engines"]["node"] = ">=18"
+json.dump(pkg, open(path, "w"))
+PY
   run_compliance "$REPO"
-  assert_success
-  assert_output --partial "engines.node is >=18, fleet default is >="
+  assert_failure
+  assert_output --partial "engines.node must be >=${major} to match fleet Node (found: >=18)"
+}
+
+@test "missing devEngines.runtime fails" {
+  local major
+  major="$(fleet_node_major)"
+  python3 - "$REPO/package.json" <<'PY'
+import json, sys
+path = sys.argv[1]
+pkg = json.load(open(path))
+pkg.pop("devEngines", None)
+json.dump(pkg, open(path, "w"))
+PY
+  run_compliance "$REPO"
+  assert_failure
+  assert_output --partial "devEngines.runtime must be { name: node, version: >=${major}, onFail: error }"
+}
+
+@test "@types/node on an older major fails" {
+  local major
+  major="$(fleet_node_major)"
+  python3 - "$REPO/package.json" <<'PY'
+import json, sys
+path = sys.argv[1]
+pkg = json.load(open(path))
+pkg["devDependencies"] = {"@types/node": "^18.0.0"}
+json.dump(pkg, open(path, "w"))
+PY
+  run_compliance "$REPO"
+  assert_failure
+  assert_output --partial "@types/node major must be ${major} to match fleet Node (found: ^18.0.0)"
 }
 
 # ── Python repos ──────────────────────────────────────────────────────────────

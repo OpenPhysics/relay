@@ -72,21 +72,50 @@ if [ -f package.json ]; then
     warn ".github/dependabot.yml is missing for npm repository"
   fi
 
-  # Node engine / @types/node should track relay's fleet Node major (ci.yml default).
+  # Node engine / devEngines must track relay's fleet Node major (ci.yml default).
+  # @types/node is required only when the repo already depends on it.
   CI_YML="$RELAY_ROOT/.github/workflows/ci.yml"
   EXPECTED_NODE_MAJOR=""
   if [ -f "$CI_YML" ]; then
     EXPECTED_NODE_MAJOR="$(grep -oP 'default:\s*["'\'']\K[0-9]+' "$CI_YML" | head -n1 || true)"
   fi
-  EXPECTED_NODE_MAJOR="${EXPECTED_NODE_MAJOR:-24}"
+  EXPECTED_NODE_MAJOR="${EXPECTED_NODE_MAJOR:-26}"
 
-  ENGINES_NODE="$(python3 -c "import json; print((json.load(open('package.json')).get('engines') or {}).get('node') or '')" 2>/dev/null || true)"
+  PKG_META="$(python3 -c "
+import json
+p = json.load(open('package.json'))
+engines = (p.get('engines') or {}).get('node') or ''
+types = (p.get('devDependencies') or {}).get('@types/node') or (p.get('dependencies') or {}).get('@types/node') or ''
+rt = (p.get('devEngines') or {}).get('runtime') or {}
+dev = (rt.get('version') or '') + '|' + (rt.get('onFail') or '') if rt.get('name') == 'node' else ''
+print(engines + '\t' + types + '\t' + dev)
+")"
+  ENGINES_NODE="$(cut -f1 <<<"$PKG_META")"
+  TYPES_NODE="$(cut -f2 <<<"$PKG_META")"
+  DEV_RUNTIME="$(cut -f3 <<<"$PKG_META")"
+
   if [ -z "$ENGINES_NODE" ]; then
-    warn "package.json engines.node is missing (expected >=${EXPECTED_NODE_MAJOR})"
+    fail "package.json engines.node is missing (expected >=${EXPECTED_NODE_MAJOR})"
   elif [[ ! "$ENGINES_NODE" =~ ^\>=${EXPECTED_NODE_MAJOR}(\.0\.0)?$ ]]; then
-    warn "engines.node is $ENGINES_NODE, fleet default is >=${EXPECTED_NODE_MAJOR}"
+    fail "engines.node must be >=${EXPECTED_NODE_MAJOR} to match fleet Node (found: $ENGINES_NODE)"
   else
     pass "engines.node is $ENGINES_NODE"
+  fi
+
+  # devEngines makes npm refuse to install or run scripts on an older local Node.
+  if [[ "$DEV_RUNTIME" =~ ^\>=${EXPECTED_NODE_MAJOR}(\.0\.0)?\|error$ ]]; then
+    pass "devEngines.runtime requires Node >=${EXPECTED_NODE_MAJOR} (onFail: error)"
+  else
+    fail "devEngines.runtime must be { name: node, version: >=${EXPECTED_NODE_MAJOR}, onFail: error } (found: ${DEV_RUNTIME:-missing})"
+  fi
+
+  if [ -n "$TYPES_NODE" ]; then
+    TYPES_MAJOR="$(sed -E 's/^[^0-9]*([0-9]+).*/\1/' <<<"$TYPES_NODE")"
+    if [ "$TYPES_MAJOR" != "$EXPECTED_NODE_MAJOR" ]; then
+      fail "@types/node major must be ${EXPECTED_NODE_MAJOR} to match fleet Node (found: $TYPES_NODE)"
+    else
+      pass "@types/node major is $TYPES_MAJOR"
+    fi
   fi
 elif [ -f pyproject.toml ] || [ -f setup.py ] || [ -f requirements.txt ]; then
   if [ -f .github/dependabot.yml ]; then

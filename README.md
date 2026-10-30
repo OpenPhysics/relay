@@ -100,8 +100,8 @@ fails:
 - **CI wiring** — `ci.yml` calls this repo's reusable `ci.yml`, `shared-dependency-review.yml`, and
   `shared-codeql.yml` (warn if missing or not yet wired); `.github/dependabot.yml` present for
   npm/Python repos (warn).
-- **Node pins** — for npm repos, `engines.node` should track the fleet Node major declared in
-  [`ci.yml`](.github/workflows/ci.yml) (warn).
+- **Node pins** — for npm repos, `engines.node` is `>=26` and `devEngines.runtime` requires Node
+  `>=26` with `onFail: "error"` (fail). When `@types/node` is a dependency, its major must be 26 too.
 - **GitHub security** (when `gh` is authenticated) — Dependabot vulnerability alerts + security
   updates, and secret scanning on public repos (warn). Fleet-wide feature flags and security
   settings are defined in [`config/github-repo-baseline.json`](config/github-repo-baseline.json);
@@ -168,7 +168,7 @@ Cross-repo automation, all driven from the catalog:
 
 ## Node version
 
-The default Node version for the npm side of the fleet is **`"24"`**, declared in every relay
+The default Node version for the npm side of the fleet is **`"26"`**, declared in every relay
 workflow that runs `setup-node` — bump them together:
 
 - [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — `node-version` input default
@@ -178,11 +178,16 @@ workflow that runs `setup-node` — bump them together:
 
 [`scripts/check-node-version.sh`](scripts/check-node-version.sh) enforces that they stay in
 sync (run in CI by [`relay-selfcheck.yml`](.github/workflows/relay-selfcheck.yml)), so a half-done
-bump fails fast instead of drifting silently. When sibling member checkouts are present (local
-OpenPhysics workspace), it also checks each npm repo's `package.json` against the same major —
-existing repos onboarded before this baseline was set may still show drift; that's a real gap to
-close per repo, not a bug in the check.
+bump fails fast instead of drifting silently. It also checks relay's own `package.json`, and,
+when sibling member checkouts are present (local OpenPhysics workspace), every catalog repo that
+has one.
 
-[`scripts/check-repo-compliance.sh`](scripts/check-repo-compliance.sh) warns (rather than fails) a
-repo whose `engines.node` doesn't match. Prefer no `.nvmrc` / `.node-version`; if present, the
-major should match the fleet.
+npm repos must keep:
+
+- `engines.node`: `>=26` (floor matching the workflow major)
+- `devEngines.runtime`: `{ "name": "node", "version": ">=26", "onFail": "error" }` — npm refuses to install or run scripts on an older local Node
+- `@types/node`: major **26**, when that package is a dependency (Dependabot ignores `@types/node` major bumps — bump it with the fleet Node version)
+
+[`scripts/check-repo-compliance.sh`](scripts/check-repo-compliance.sh) fails a repo whose pins
+drift. Prefer no `.nvmrc` / `.node-version`; if present, the major must match the fleet.
+Python repos (`pycd48`, `vscene2d`) and `.github` do not run Node.

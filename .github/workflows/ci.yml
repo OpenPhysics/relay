@@ -8,7 +8,7 @@ on:
         # runs setup-node — bump them together (enforced by check-node-version.sh).
         # See relay/README.md ("Node version").
         type: string
-        default: "24"
+        default: "26"
       run-tests:
         # Tri-state: "true" forces the test step on, "false" forces it off, and the
         # default "" means auto — run tests when the repo defines a "test" npm script.

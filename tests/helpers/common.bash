@@ -85,7 +85,10 @@ EOF
   "name": "fixture-lib",
   "version": "1.0.0",
   "type": "module",
-  "engines": { "node": ">=${major}" }
+  "engines": { "node": ">=${major}" },
+  "devEngines": {
+    "runtime": { "name": "node", "version": ">=${major}", "onFail": "error" }
+  }
 }
 EOF
 }

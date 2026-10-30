@@ -7,7 +7,7 @@ on:
         # Mirrors the fleet Node default — bump all setup-node workflows together.
         # See relay/README.md ("Node version").
         type: string
-        default: "24"
+        default: "26"
       dist-path:
         type: string
         default: "dist"
