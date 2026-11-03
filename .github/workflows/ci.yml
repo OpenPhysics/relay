@@ -23,8 +23,6 @@ permissions:
 # already define the ci-${{ github.workflow }}-${{ github.ref }} group. Declaring
 # the same group in the called workflow makes GitHub detect a deadlock with the
 # caller's run and kill the reusable call at startup, so the build never runs.
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:

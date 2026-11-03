@@ -31,9 +31,6 @@ concurrency:
   group: fleet-health
   cancel-in-progress: true
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   discover:
     runs-on: ubuntu-latest
